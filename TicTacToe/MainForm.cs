@@ -1,4 +1,38 @@
-﻿using System;
+﻿/*
+ *   TicTacToe
+ *   
+ *   A game you can be an Attacker or Defender, as a user you may put an O
+ *   chess while the program might response from a X chess. Which of the
+ *   roles also gives you a chance to simulate within various cases in Debug
+ *   mode. The code enumerates a course of options, the modes is encoded in
+ *   the 2-bit field from value-type Board, and the one exceed 2-bit is
+ *   treated as a control code to NewGame. The Startup code intends to just
+ *   reset the game without switching into other encoded mode. The Conjugate
+ *   code switches in between Attacker or Defender while the Configurate code
+ *   may on or off the Debug mode when you press the key D or Escape. The
+ *   Conjugate code combining the Configurate code reproduces 4 sence, which
+ *   of those can further jump in Bonus sence or Clumsy sence, where you
+ *   press the key W or L. Whenever you press the key Escape, you will
+ *   ultimately get in the original scene you held.
+ *   
+ *   Copyright (C) 2025  Edmond Chow
+ *   
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as published
+ *   by the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *   
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Affero General Public License for more details.
+ *   
+ *   You should have received a copy of the GNU Affero General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *   
+ *   If you have any inquiry, feel free to contact <edmond-chow@outlook.com>.
+ */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -17,6 +51,8 @@ namespace TicTacToe
             StartupMode = 4,
             ConjugateMode = 5,
             ConfigurateMode = 6,
+            BonusScene = 7,
+            ClumsyScene = 8,
         }
         private enum Turn : uint
         {
@@ -48,17 +84,30 @@ namespace TicTacToe
         }
         private struct Board
         {
+            private const uint MaskFst3 = 0x3F00u;
+            private const uint Box = 0b11u;
+            private const uint Conjg = 0b1u;
+            private const uint Confg = 0b10u;
+            private const uint P1 = 0b1u;
+            private const uint P2 = 0b10u;
+            private const uint P4 = 0b100u;
+            private const uint P8 = 0b1000u;
+            private const int IRound = 0;
+            private const int IMode = 10;
+            private const int ITurn = 11;
+            private const int IResult = 12;
+            private const int IState = 13;
             private static readonly int[] Offset;
             private static readonly uint[] Mask;
             static Board()
             {
                 Offset = new int[] { 20, 12, 10, 8, 14, 24, 6, 0, 2, 4, 30, 28, 26, 16 };
                 Mask = new uint[Offset.Length];
-                Mask[0] = 0xF00000u;
-                Mask[13] = 0xF0000u;
+                Mask[IRound] = 0xF00000u;
+                Mask[IState] = 0xF0000u;
                 for (int i = 1; i < Offset.Length - 1; ++i)
                 {
-                    Mask[i] = 0b11u << Offset[i];
+                    Mask[i] = Box << Offset[i];
                 }
             }
             private uint Data;
@@ -80,88 +129,88 @@ namespace TicTacToe
             {
                 get
                 {
-                    return (Mode)((Data & Mask[10]) >> Offset[10]);
+                    return (Mode)((Data & Mask[IMode]) >> Offset[IMode]);
                 }
                 set
                 {
-                    Data &= ~Mask[10];
-                    Data |= ((uint)value << Offset[10]) & Mask[10];
+                    Data &= ~Mask[IMode];
+                    Data |= ((uint)value << Offset[IMode]) & Mask[IMode];
                 }
             }
             public Mode ConjugateMode
             {
                 get
                 {
-                    return (Mode)(((uint)Mode & 0b10u) | (~(uint)Mode & 0b1u));
+                    return (Mode)(((uint)Mode & Confg) | (~(uint)Mode & Conjg));
                 }
             }
             public Mode ConfigurateMode
             {
                 get
                 {
-                    return (Mode)(((uint)Mode & 0b1u) | (~(uint)Mode & 0b10u));
+                    return (Mode)(((uint)Mode & Conjg) | (~(uint)Mode & Confg));
                 }
             }
             public bool OnDefenderSide
             {
                 get
                 {
-                    return ((uint)Mode & 0b1u) == 0b1u;
+                    return ((uint)Mode & Conjg) == Conjg;
                 }
             }
             public bool InDebugMode
             {
                 get
                 {
-                    return ((uint)Mode & 0b10) == 0b10;
+                    return ((uint)Mode & Confg) == Confg;
                 }
             }
             public Turn Turn
             {
                 get
                 {
-                    return (Turn)((Data & Mask[11]) >> Offset[11]);
+                    return (Turn)((Data & Mask[ITurn]) >> Offset[ITurn]);
                 }
                 set
                 {
-                    Data &= ~Mask[11];
-                    Data |= ((uint)value << Offset[11]) & Mask[11];
+                    Data &= ~Mask[ITurn];
+                    Data |= ((uint)value << Offset[ITurn]) & Mask[ITurn];
                 }
             }
             public Result Result
             {
                 get
                 {
-                    return (Result)((Data & Mask[12]) >> Offset[12]);
+                    return (Result)((Data & Mask[IResult]) >> Offset[IResult]);
                 }
                 set
                 {
-                    Data &= ~Mask[12];
-                    Data |= ((uint)value << Offset[12]) & Mask[12];
+                    Data &= ~Mask[IResult];
+                    Data |= ((uint)value << Offset[IResult]) & Mask[IResult];
                 }
             }
             public uint Round
             {
                 get
                 {
-                    return (Data & Mask[0]) >> Offset[0];
+                    return (Data & Mask[IRound]) >> Offset[IRound];
                 }
                 set
                 {
-                    Data &= ~Mask[0];
-                    Data |= (value << Offset[0]) & Mask[0];
+                    Data &= ~Mask[IRound];
+                    Data |= (value << Offset[IRound]) & Mask[IRound];
                 }
             }
             public uint State
             {
                 get
                 {
-                    return (Data & Mask[13]) >> Offset[13];
+                    return (Data & Mask[IState]) >> Offset[IState];
                 }
                 private set
                 {
-                    Data &= ~Mask[13];
-                    Data |= (value << Offset[13]) & Mask[13];
+                    Data &= ~Mask[IState];
+                    Data |= (value << Offset[IState]) & Mask[IState];
                 }
             }
             public int Moves
@@ -175,28 +224,28 @@ namespace TicTacToe
             {
                 get
                 {
-                    return (Orientation)(State & 0b11u);
+                    return (Orientation)(State & Box);
                 }
             }
             public bool Parse1
             {
                 get
                 {
-                    return (State & 0b1u) == 0b1u;
+                    return (State & P1) == P1;
                 }
                 set
                 {
-                    bool Origin = (State & 0b1u) == 0b1u;
+                    bool Origin = (State & P1) == P1;
                     if (Origin == value) { return; }
                     if (value)
                     {
                         Rotate(1);
-                        State |= 0b1u;
+                        State |= P1;
                     }
                     else
                     {
                         Rotate(-1);
-                        State &= ~0b1u;
+                        State &= ~P1;
                     }
                 }
             }
@@ -204,21 +253,21 @@ namespace TicTacToe
             {
                 get
                 {
-                    return (State & 0b10u) == 0b10u;
+                    return (State & P2) == P2;
                 }
                 set
                 {
-                    bool Origin = (State & 0b10u) == 0b10u;
+                    bool Origin = (State & P2) == P2;
                     if (Origin == value) { return; }
                     if (value)
                     {
                         Rotate(2);
-                        State |= 0b10u;
+                        State |= P2;
                     }
                     else
                     {
                         Rotate(-2);
-                        State &= ~0b10u;
+                        State &= ~P2;
                     }
                 }
             }
@@ -226,21 +275,21 @@ namespace TicTacToe
             {
                 get
                 {
-                    return (State & 0b100u) == 0b100u;
+                    return (State & P4) == P4;
                 }
                 set
                 {
-                    bool Origin = (State & 0b100u) == 0b100u;
+                    bool Origin = (State & P4) == P4;
                     if (Origin == value) { return; }
                     if (value)
                     {
                         Rotate(4);
-                        State |= 0b100u;
+                        State |= P4;
                     }
                     else
                     {
                         Rotate(-4);
-                        State &= ~0b100u;
+                        State &= ~P4;
                     }
                 }
             }
@@ -248,38 +297,38 @@ namespace TicTacToe
             {
                 get
                 {
-                    return (State & 0b1000u) == 0b1000u;
+                    return (State & P8) == P8;
                 }
                 set
                 {
-                    bool Origin = (State & 0b1000u) == 0b1000u;
+                    bool Origin = (State & P8) == P8;
                     if (Origin == value) { return; }
                     Reflect(Orient);
-                    if (value) { State |= 0b1000u; }
-                    else { State &= ~0b1000u; }
+                    if (value) { State |= P8; }
+                    else { State &= ~P8; }
                 }
             }
             public uint Case
             {
                 get
                 {
-                    uint Result = (Data & 0b11111100000000u) >> 6;
+                    uint Rst = (Data & MaskFst3) >> 6;
                     for (int i = 4; i <= 9; ++i)
                     {
-                        Result <<= i == 7 ? 4 : 2;
-                        Result |= (Data & Mask[i]) >> Offset[i];
+                        Rst <<= i == 7 ? 4 : 2;
+                        Rst |= (Data & Mask[i]) >> Offset[i];
                     }
-                    return Result;
+                    return Rst;
                 }
                 set
                 {
-                    Data &= ~0b11111100000000u;
-                    Data |= (value >> 8) & 0b11111100000000u;
+                    Data &= ~MaskFst3;
+                    Data |= (value >> 8) & MaskFst3;
                     uint Rest = value & 0xFFFFu;
                     for (int i = 9; i >= 4; --i)
                     {
                         Data &= ~Mask[i];
-                        Data |= (Rest & 0b11u) << Offset[i];
+                        Data |= (Rest & Box) << Offset[i];
                         Rest >>= i == 7 ? 4 : 2;
                     }
                 }
@@ -288,12 +337,12 @@ namespace TicTacToe
             {
                 get
                 {
-                    Board Result = this;
+                    Board Rst = this;
                     for (int i = 1; i <= 9; ++i)
                     {
-                        if (Result[i] == Chess.Preferred) { Result[i] = Chess.None; }
+                        if (Rst[i] == Chess.Preferred) { Rst[i] = Chess.None; }
                     }
-                    return Result;
+                    return Rst;
                 }
             }
             public Board(Mode Mode)
@@ -310,19 +359,19 @@ namespace TicTacToe
             }
             public List<int> GetChessPos(Chess Chess)
             {
-                List<int> Result = new List<int>(9);
+                List<int> Rst = new List<int>(9);
                 for (int i = 1; i <= 9; ++i)
                 {
-                    if (this[i] == Chess) { Result.Add(i); }
+                    if (this[i] == Chess) { Rst.Add(i); }
                 }
-                return Result;
+                return Rst;
             }
             public Board[] GetParse(uint State)
             {
-                bool C1 = (State & 0b1u) == 0b1u;
-                bool C2 = (State & 0b10u) == 0b10u;
-                bool C4 = (State & 0b100u) == 0b100u;
-                bool C8 = (State & 0b1000u) == 0b1000u;
+                bool C1 = (State & P1) == P1;
+                bool C2 = (State & P2) == P2;
+                bool C4 = (State & P4) == P4;
+                bool C8 = (State & P8) == P8;
                 bool V1 = Parse1;
                 bool V2 = Parse2;
                 bool V4 = Parse4;
@@ -332,66 +381,66 @@ namespace TicTacToe
                 if (C2) { Sz *= 2; }
                 if (C4) { Sz *= 2; }
                 if (C8) { Sz *= 2; }
-                Board[] Result = new Board[Sz];
-                for (int i = 0; i < Result.Length; ++i)
+                Board[] Rst = new Board[Sz];
+                for (int i = 0; i < Rst.Length; ++i)
                 {
-                    Result[i].Data = Data;
+                    Rst[i].Data = Data;
                 }
                 int Dx = 1;
                 if (C1)
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Result.Length; ++i)
+                    for (int i = Dy; i < Rst.Length; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
-                        Result[i].Parse1 = !V1;
+                        Rst[i].Parse1 = !V1;
                     }
                 }
                 if (C2)
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Result.Length; ++i)
+                    for (int i = Dy; i < Rst.Length; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
-                        Result[i].Parse2 = !V2;
+                        Rst[i].Parse2 = !V2;
                     }
                 }
                 if (C4)
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Result.Length; ++i)
+                    for (int i = Dy; i < Rst.Length; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
-                        Result[i].Parse4 = !V4;
+                        Rst[i].Parse4 = !V4;
                     }
                 }
                 if (C8)
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Result.Length; ++i)
+                    for (int i = Dy; i < Rst.Length; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
-                        Result[i].Parse8 = !V8;
+                        Rst[i].Parse8 = !V8;
                     }
                 }
-                return Result;
+                return Rst;
             }
             public override string ToString()
             {
-                string Result = "[ ";
+                string Rst = "[ ";
                 for (int i = 1; i <= 9; ++i)
                 {
-                    if (this[i] == Chess.None) { Result += "?"; }
-                    else if (this[i] == Chess.X) { Result += "X"; }
-                    else if (this[i] == Chess.O) { Result += "O"; }
-                    else if (this[i] == Chess.Preferred) { Result += "+"; }
-                    if (i == 3 || i == 6) { Result += ", "; }
+                    if (this[i] == Chess.None) { Rst += "?"; }
+                    else if (this[i] == Chess.X) { Rst += "X"; }
+                    else if (this[i] == Chess.O) { Rst += "O"; }
+                    else if (this[i] == Chess.Preferred) { Rst += "+"; }
+                    if (i == 3 || i == 6) { Rst += ", "; }
                 }
-                return Result += " ]";
+                return Rst += " ]";
             }
             public void Rotate(int Moves)
             {
@@ -531,36 +580,19 @@ namespace TicTacToe
         #endregion
         #region fields
         private readonly Control[] Co;
+        private Mode LstMo;
         private string Title
         {
             get
             {
-                string Result = "TicTacToe";
-                if (Bo.Mode == Mode.Attacker || Bo.Mode == Mode.DebugAttacker)
-                {
-                    Result += " Attacker";
-                }
-                else if (Bo.Mode == Mode.Defender || Bo.Mode == Mode.DebugDefender)
-                {
-                    Result += " Defender";
-                }
-                if (Bo.Mode == Mode.DebugAttacker || Bo.Mode == Mode.DebugDefender)
-                {
-                    Result = "< Debug > " + Result;
-                }
-                if (Bo.Result == MainForm.Result.Won)
-                {
-                    Result += " [ Win ]";
-                }
-                else if (Bo.Result == MainForm.Result.Lost)
-                {
-                    Result += " [ Lost ]";
-                }
-                else if (Bo.Result == MainForm.Result.Tied)
-                {
-                    Result += " [ Tied ]";
-                }
-                return Result;
+                string Rst = Bo.InDebugMode ? "< Debug > " : "";
+                if (LstMo != Mode.StartupMode) { Rst = Bo.OnDefenderSide ? "< Clumsy > " : "< Bonus > "; }
+                Rst += "TicTacToe";
+                Rst += Bo.OnDefenderSide ? " Defender" : " Attacker";
+                if (Bo.Result == Result.Won) { Rst += " [ Win ]"; }
+                else if (Bo.Result == Result.Lost) { Rst += " [ Lost ]"; }
+                else if (Bo.Result == Result.Tied) { Rst += " [ Tied ]"; }
+                return Rst;
             }
         }
         private Board Bo;
@@ -629,6 +661,7 @@ namespace TicTacToe
         public MainForm()
         {
             InitializeComponent();
+            LstMo = Mode.StartupMode;
             Co = new Control[] { this, Button1, Button2, Button3, Button4, Button5, Button6, Button7, Button8, Button9, ButtonSwitch, ButtonReset };
         }
         private void ChooseChess(List<int> Chosen)
@@ -708,14 +741,41 @@ namespace TicTacToe
             if (Mode == Mode.StartupMode || Mo == Mode) { Tu = Turn.Unspecified; }
             else if (Mode == Mode.ConjugateMode) { Mo = Bo.ConjugateMode; }
             else if (Mode == Mode.ConfigurateMode) { Mo = Bo.ConfigurateMode; }
-            else { Mo = Mode; }
-                ButtonReset.Enabled = false;
+            else if (Mode == Mode.BonusScene)
+            {
+                if (LstMo == Mode.StartupMode) { LstMo = Mo; }
+                if (Mo == Mode.DebugAttacker) { Tu = Turn.Unspecified; }
+                else { Mo = Mode.DebugAttacker; }
+            }
+            else if (Mode == Mode.ClumsyScene)
+            {
+                if (LstMo == Mode.StartupMode) { LstMo = Mo; }
+                if (Mo == Mode.DebugDefender) { Tu = Turn.Unspecified; }
+                else { Mo = Mode.DebugDefender; }
+            }
+            else
+            {
+                Mo = Mode;
+            }
+            ButtonReset.Enabled = false;
             for (int i = 1; i <= 9; ++i)
             {
                 Co[i].Text = string.Empty;
                 Co[i].ForeColor = Color.Black;
             }
-            if (Bo.OnDefenderSide && !Bo.InDebugMode) { CheckResponse(); }
+            if (LstMo != Mode.StartupMode)
+            {
+                PutChess(Button1);
+                PutChess(Button2);
+                PutChess(Button3);
+                PutChess(Button6);
+                PutChess(Button9);
+                PutChess(Button8);
+                PutChess(Button7);
+                PutChess(Button4);
+                PutChess(Button5);
+            }
+            else if (Bo.OnDefenderSide && !Bo.InDebugMode) { CheckResponse(); }
         }
         private void PutChess(Control Target)
         {
@@ -750,11 +810,27 @@ namespace TicTacToe
         #region event-handlers
         private void ButtonSwitch_Click(object sender, EventArgs e)
         {
-            NewGame(Mode.ConjugateMode);
+            if (LstMo != Mode.StartupMode)
+            {
+                NewGame(Bo.OnDefenderSide ? Mode.BonusScene : Mode.ClumsyScene);
+            }
+            else
+            {
+                NewGame(Mode.ConjugateMode);
+            }
         }
         private void ButtonReset_Click(object sender, EventArgs e)
         {
-            NewGame(Mode.StartupMode);
+            if (LstMo != Mode.StartupMode)
+            {
+                Mode Mo = LstMo;
+                LstMo = Mode.StartupMode;
+                NewGame(Mo);
+            }
+            else
+            {
+                NewGame(Mode.StartupMode);
+            }
         }
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -762,7 +838,21 @@ namespace TicTacToe
         }
         private void Button_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.D && !Bo.InDebugMode)
+            if (e.KeyCode == Keys.W)
+            {
+                NewGame(Mode.BonusScene);
+            }
+            else if (e.KeyCode == Keys.L)
+            {
+                NewGame(Mode.ClumsyScene);
+            }
+            else if (e.KeyCode == Keys.Escape && LstMo != Mode.StartupMode)
+            {
+                Mode Mo = LstMo;
+                LstMo = Mode.StartupMode;
+                NewGame(Mo);
+            }
+            else if (e.KeyCode == Keys.D && !Bo.InDebugMode)
             {
                 NewGame(Bo.ConfigurateMode);
             }

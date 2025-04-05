@@ -151,6 +151,7 @@
             this.ButtonSwitch.Text = "Switch";
             this.ButtonSwitch.UseVisualStyleBackColor = true;
             this.ButtonSwitch.Click += new System.EventHandler(this.ButtonSwitch_Click);
+            this.ButtonSwitch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
             // 
             // ButtonReset
             // 
@@ -163,6 +164,7 @@
             this.ButtonReset.Text = "Reset";
             this.ButtonReset.UseVisualStyleBackColor = true;
             this.ButtonReset.Click += new System.EventHandler(this.ButtonReset_Click);
+            this.ButtonReset.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
             // 
             // MainForm
             // 
@@ -180,6 +182,7 @@
             this.Controls.Add(this.Button9);
             this.Controls.Add(this.ButtonSwitch);
             this.Controls.Add(this.ButtonReset);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
