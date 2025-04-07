@@ -8,10 +8,10 @@
  *   the 2-bit field from a 32-bit type Board, and the one exceeding 2-bit is
  *   treated as a control code to NewGame. The Startup code intends to just
  *   reset the game without switching into other encoded mode. The Conjugate
- *   code switches in between Attacker or Defender while the Configurate code
+ *   code switches in between Attacker or Defender while the Configure code
  *   may on or off the Debug mode when you press the key D or Escape. The
- *   Conjugate code combining the Configurate code reproduces 4 sence, which
- *   of those can further jump in Bonus sence or Clumsy sence, where you
+ *   Conjugate code combining the Configure code reproduces 4 scene, which
+ *   of those can further jump in Bonus scene or Clumsy scene, where you
  *   press the key W or L. Whenever you press the key Escape, you will
  *   ultimately get in the original scene you held.
  *   

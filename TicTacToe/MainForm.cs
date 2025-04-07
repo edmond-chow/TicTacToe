@@ -8,10 +8,10 @@
  *   the 2-bit field from a 32-bit type Board, and the one exceeding 2-bit is
  *   treated as a control code to NewGame. The Startup code intends to just
  *   reset the game without switching into other encoded mode. The Conjugate
- *   code switches in between Attacker or Defender while the Configurate code
+ *   code switches in between Attacker or Defender while the Configure code
  *   may on or off the Debug mode when you press the key D or Escape. The
- *   Conjugate code combining the Configurate code reproduces 4 sence, which
- *   of those can further jump in Bonus sence or Clumsy sence, where you
+ *   Conjugate code combining the Configure code reproduces 4 scene, which
+ *   of those can further jump in Bonus scene or Clumsy scene, where you
  *   press the key W or L. Whenever you press the key Escape, you will
  *   ultimately get in the original scene you held.
  *   
@@ -50,7 +50,7 @@ namespace TicTacToe
             DebugDefender = 3,
             StartupMode = 4,
             ConjugateMode = 5,
-            ConfigurateMode = 6,
+            ConfigureMode = 6,
             BonusScene = 7,
             ClumsyScene = 8,
         }
@@ -144,7 +144,7 @@ namespace TicTacToe
                     return (Mode)(((uint)Mode & Confg) | (~(uint)Mode & Conjg));
                 }
             }
-            public Mode ConfigurateMode
+            public Mode ConfigureMode
             {
                 get
                 {
@@ -740,7 +740,7 @@ namespace TicTacToe
         {
             if (Mode == Mode.StartupMode || Mo == Mode) { Tu = Turn.Unspecified; }
             else if (Mode == Mode.ConjugateMode) { Mo = Bo.ConjugateMode; }
-            else if (Mode == Mode.ConfigurateMode) { Mo = Bo.ConfigurateMode; }
+            else if (Mode == Mode.ConfigureMode) { Mo = Bo.ConfigureMode; }
             else if (Mode == Mode.BonusScene)
             {
                 if (LstMo == Mode.StartupMode) { LstMo = Mo; }
@@ -854,11 +854,11 @@ namespace TicTacToe
             }
             else if (e.KeyCode == Keys.D && !Bo.InDebugMode)
             {
-                NewGame(Bo.ConfigurateMode);
+                NewGame(Bo.ConfigureMode);
             }
             else if (e.KeyCode == Keys.Escape && Bo.InDebugMode)
             {
-                NewGame(Bo.ConfigurateMode);
+                NewGame(Bo.ConfigureMode);
             }
         }
         private void Button_Click(object sender, EventArgs e)
