@@ -5,7 +5,7 @@
  *   chess while the program might response from a X chess. Which of the
  *   roles also gives you a chance to simulate within various cases in Debug
  *   mode. The code enumerates a course of options, the modes is encoded in
- *   the 2-bit field from value-type Board, and the one exceed 2-bit is
+ *   the 2-bit field from 32-bit type Board, and the one exceed 2-bit is
  *   treated as a control code to NewGame. The Startup code intends to just
  *   reset the game without switching into other encoded mode. The Conjugate
  *   code switches in between Attacker or Defender while the Configurate code
@@ -348,7 +348,7 @@ namespace TicTacToe
             public Board(Mode Mode)
             {
                 Data = 0u;
-                if (((uint)Mode & 0b1u) == 0b0u) { Turn = Turn.User; }
+                if (((uint)Mode & Conjg) == 0b0u) { Turn = Turn.User; }
                 else { Turn = Turn.Response; }
                 this.Mode = Mode;
             }
@@ -446,9 +446,9 @@ namespace TicTacToe
             {
                 if (Moves < 0) { Moves = 8 - Moves; }
                 Moves %= 8;
-                uint Nears = (Data & 0xFFFF) << Moves * 2;
-                Nears |= (Nears & 0xFFFF0000) >> 16;
-                Data = (Data & 0xFFFF0000) | (Nears & 0xFFFF);
+                uint Nears = (Data & 0xFFFFu) << Moves * 2;
+                Nears |= (Nears & 0xFFFF0000u) >> 16;
+                Data = (Data & 0xFFFF0000u) | (Nears & 0xFFFFu);
             }
             public void Reflect(Orientation Orient)
             {
