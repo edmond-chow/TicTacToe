@@ -357,7 +357,7 @@ namespace TicTacToe
                 Data = 0u;
                 this.Case = Case;
             }
-            public List<int> GetChessPos(Chess Chess)
+            public List<int> LocateChesses(Chess Chess)
             {
                 List<int> Rst = new List<int>(9);
                 for (int i = 1; i <= 9; ++i)
@@ -366,7 +366,7 @@ namespace TicTacToe
                 }
                 return Rst;
             }
-            public Board[] GetParse(uint State)
+            public Board[] Parses(uint State)
             {
                 bool C1 = (State & P1) == P1;
                 bool C2 = (State & P2) == P2;
@@ -384,7 +384,7 @@ namespace TicTacToe
                 Board[] Rst = new Board[Sz];
                 for (int i = 0; i < Rst.Length; ++i)
                 {
-                    Rst[i].Data = Data;
+                    Rst[i] = this;
                 }
                 int Dx = 1;
                 if (C1)
@@ -513,12 +513,12 @@ namespace TicTacToe
             public Pack(uint Source)
             {
                 Data = Source;
-                Parses = new Board(Source).GetParse(Source >> 24);
+                Parses = new Board(Source).Parses(Source >> 24);
             }
         }
         #endregion
         #region constants
-        private static readonly Pack Mask;
+        private static readonly Pack MaskA;
         private static readonly Pack WonC;
         private static readonly Pack LostC;
         private static readonly Pack MaskC;
@@ -540,7 +540,7 @@ namespace TicTacToe
         private static readonly Pack[] Cases;
         static MainForm()
         {
-            Mask = new Pack(0b1111_00111111_00111111_00111111u);
+            MaskA = new Pack(0b1111_00111111_00111111_00111111u);
             WonC = new Pack(0b0011_00001000_00001000_00001000u);
             LostC = new Pack(0b0011_00000100_00000100_00000100u);
             MaskC = new Pack(0b0011_00001100_00001100_00001100u);
@@ -674,7 +674,7 @@ namespace TicTacToe
             {
                 if ((Bo.Case & Mask[i].Case) == Case[i].Sanitizer.Case)
                 {
-                    ChooseChess(Case[i].GetChessPos(Chess.Preferred));
+                    ChooseChess(Case[i].LocateChesses(Chess.Preferred));
                     return true;
                 }
             }
@@ -682,7 +682,7 @@ namespace TicTacToe
         }
         private void CheckResponse()
         {
-            Board[] PMask = Mask.Boards;
+            Board[] PMask = MaskA.Boards;
             foreach (Pack Case in Cases)
             {
                 if (ProcessResponse(Case.Boards, PMask)) { return; }
@@ -707,7 +707,7 @@ namespace TicTacToe
             if (ProcessResponse(PWonCM, PMaskCM)) { return; }
             if (ProcessResponse(PWonSN, PMaskSN)) { return; }
             if (ProcessResponse(PWonSM, PMaskSM)) { return; }
-            ChooseChess(Bo.GetChessPos(Chess.None));
+            ChooseChess(Bo.LocateChesses(Chess.None));
         }
         private bool ProcessResult(Board[] Case, Board[] Mask, Result Result)
         {
