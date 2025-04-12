@@ -50,8 +50,8 @@
             this.Button1.Size = new System.Drawing.Size(80, 80);
             this.Button1.TabIndex = 11;
             this.Button1.UseVisualStyleBackColor = true;
-            this.Button1.Click += new System.EventHandler(this.Button_Click);
-            this.Button1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button1.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button2
             // 
@@ -61,8 +61,8 @@
             this.Button2.Size = new System.Drawing.Size(80, 80);
             this.Button2.TabIndex = 12;
             this.Button2.UseVisualStyleBackColor = true;
-            this.Button2.Click += new System.EventHandler(this.Button_Click);
-            this.Button2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button2.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button3
             // 
@@ -72,8 +72,8 @@
             this.Button3.Size = new System.Drawing.Size(80, 80);
             this.Button3.TabIndex = 13;
             this.Button3.UseVisualStyleBackColor = true;
-            this.Button3.Click += new System.EventHandler(this.Button_Click);
-            this.Button3.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button3.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button3.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button4
             // 
@@ -83,8 +83,8 @@
             this.Button4.Size = new System.Drawing.Size(80, 80);
             this.Button4.TabIndex = 14;
             this.Button4.UseVisualStyleBackColor = true;
-            this.Button4.Click += new System.EventHandler(this.Button_Click);
-            this.Button4.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button4.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button4.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button5
             // 
@@ -94,8 +94,8 @@
             this.Button5.Size = new System.Drawing.Size(80, 80);
             this.Button5.TabIndex = 15;
             this.Button5.UseVisualStyleBackColor = true;
-            this.Button5.Click += new System.EventHandler(this.Button_Click);
-            this.Button5.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button5.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button5.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button6
             // 
@@ -105,8 +105,8 @@
             this.Button6.Size = new System.Drawing.Size(80, 80);
             this.Button6.TabIndex = 16;
             this.Button6.UseVisualStyleBackColor = true;
-            this.Button6.Click += new System.EventHandler(this.Button_Click);
-            this.Button6.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button6.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button6.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button7
             // 
@@ -116,8 +116,8 @@
             this.Button7.Size = new System.Drawing.Size(80, 80);
             this.Button7.TabIndex = 17;
             this.Button7.UseVisualStyleBackColor = true;
-            this.Button7.Click += new System.EventHandler(this.Button_Click);
-            this.Button7.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button7.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button7.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button8
             // 
@@ -127,8 +127,8 @@
             this.Button8.Size = new System.Drawing.Size(80, 80);
             this.Button8.TabIndex = 18;
             this.Button8.UseVisualStyleBackColor = true;
-            this.Button8.Click += new System.EventHandler(this.Button_Click);
-            this.Button8.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button8.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button8.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // Button9
             // 
@@ -138,8 +138,8 @@
             this.Button9.Size = new System.Drawing.Size(80, 80);
             this.Button9.TabIndex = 19;
             this.Button9.UseVisualStyleBackColor = true;
-            this.Button9.Click += new System.EventHandler(this.Button_Click);
-            this.Button9.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.Button9.Click += new System.EventHandler(this.ButtonChessClick);
+            this.Button9.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // ButtonSwitch
             // 
@@ -150,8 +150,8 @@
             this.ButtonSwitch.TabIndex = 20;
             this.ButtonSwitch.Text = "Switch";
             this.ButtonSwitch.UseVisualStyleBackColor = true;
-            this.ButtonSwitch.Click += new System.EventHandler(this.ButtonSwitch_Click);
-            this.ButtonSwitch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.ButtonSwitch.Click += new System.EventHandler(this.ButtonSwitchClick);
+            this.ButtonSwitch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // ButtonReset
             // 
@@ -163,8 +163,8 @@
             this.ButtonReset.TabIndex = 21;
             this.ButtonReset.Text = "Reset";
             this.ButtonReset.UseVisualStyleBackColor = true;
-            this.ButtonReset.Click += new System.EventHandler(this.ButtonReset_Click);
-            this.ButtonReset.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Button_KeyDown);
+            this.ButtonReset.Click += new System.EventHandler(this.ButtonResetClick);
+            this.ButtonReset.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ButtonChessKeyDown);
             // 
             // MainForm
             // 
@@ -189,7 +189,7 @@
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "TicTacToe";
-            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.Load += new System.EventHandler(this.MainWindowLoad);
             this.ResumeLayout(false);
 
         }

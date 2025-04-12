@@ -409,8 +409,8 @@ public class MainWindow extends JDialog {
             return Rst;
         }
         public void rotate(int moves) {
-            if (moves < 0) { moves = 8 - moves; }
             moves %= 8;
+            if (moves < 0) { moves += 8; }
             int Nears = (Data & 0xFFFF) << moves * 2;
             Nears |= (Nears & 0xFFFF0000) >>> 16;
             Data = (Data & 0xFFFF0000) | (Nears & 0xFFFF);
@@ -660,7 +660,7 @@ public class MainWindow extends JDialog {
         setTitle("TicTacToe");
         setLocationRelativeTo(null);
         setIconImage(new ImageIcon(getClass().getResource( "/TicTacToe.png" )).getImage());
-        addWindowListener(new FormListener());
+        addWindowListener(new MainListener());
         Button1.addActionListener(new ChessListener());
         Button2.addActionListener(new ChessListener());
         Button3.addActionListener(new ChessListener());
@@ -835,14 +835,14 @@ public class MainWindow extends JDialog {
             }
         }
     }
-    private void actionSwitchClick(Object sender, ActionEvent e) {
+    private void buttonSwitchClick(Object sender, ActionEvent e) {
         if (LstMo != Mode.StartupMode) {
             newGame(Bo.onDefenderSide() ? Mode.BonusScene : Mode.ClumsyScene);
         } else {
             newGame(Mode.ConjugateMode);
         }
     }
-    private void actionResetClick(Object sender, ActionEvent e) {
+    private void buttonResetClick(Object sender, ActionEvent e) {
         if (LstMo != Mode.StartupMode) {
             Mode Mo = LstMo;
             LstMo = Mode.StartupMode;
@@ -851,10 +851,10 @@ public class MainWindow extends JDialog {
             newGame(Mode.StartupMode);
         }
     }
-    private void actionFormLoad(Object sender, WindowEvent e) {
+    private void mainWindowLoad(Object sender, WindowEvent e) {
         newGame(Mode.StartupMode);
     }
-    private void actionChessKeyDown(Object sender, KeyEvent e) {
+    private void buttonChessKeyDown(Object sender, KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_W) {
             newGame(Mode.BonusScene);
         } else if (e.getKeyCode() == KeyEvent.VK_L) {
@@ -869,13 +869,13 @@ public class MainWindow extends JDialog {
             newGame(Bo.getConfigureMode());
         }
     }
-    private void actionChessClick(Object sender, ActionEvent e) {
+    private void buttonChessClick(Object sender, ActionEvent e) {
         putChess((Container)sender);
     }
-    private class FormListener implements WindowListener {
+    private class MainListener implements WindowListener {
         @Override
         public void windowOpened(WindowEvent e) {
-            actionFormLoad(e.getSource(), e);
+            mainWindowLoad(e.getSource(), e);
         }
         @Override
         public void windowClosing(WindowEvent e) {
@@ -899,11 +899,11 @@ public class MainWindow extends JDialog {
     private class ChessListener implements ActionListener, KeyListener, FocusListener, MouseListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            actionChessClick(e.getSource(), e);
+            buttonChessClick(e.getSource(), e);
         }
         @Override
         public void keyPressed(KeyEvent e) {
-            actionChessKeyDown(e.getSource(), e);
+            buttonChessKeyDown(e.getSource(), e);
         }
         @Override
         public void keyReleased(KeyEvent e) {
@@ -940,13 +940,13 @@ public class MainWindow extends JDialog {
     private class SwitchListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            actionSwitchClick(e.getSource(), e);
+            buttonSwitchClick(e.getSource(), e);
         }
     }
     private class ResetListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            actionResetClick(e.getSource(), e);
+            buttonResetClick(e.getSource(), e);
         }
     }
 }

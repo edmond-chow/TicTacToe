@@ -434,7 +434,7 @@ namespace TicTacToe
             {
                 StringBuilder Rst = new StringBuilder(20);
                 Rst.Append("{ ");
-                Rst.Append(Convert.ToString(State, 16).ToUpper());
+                Rst.Append(Convert.ToString(Round, 16).ToUpper());
                 Rst.Append(" } [ ");
                 for (int i = 1; i <= 9; ++i)
                 {
@@ -451,8 +451,8 @@ namespace TicTacToe
             }
             public void Rotate(int Moves)
             {
-                if (Moves < 0) { Moves = 8 - Moves; }
                 Moves %= 8;
+                if (Moves < 0) { Moves += 8; }
                 uint Nears = (Data & 0xFFFFu) << Moves * 2;
                 Nears |= (Nears & 0xFFFF0000u) >> 16;
                 Data = (Data & 0xFFFF0000u) | (Nears & 0xFFFFu);
@@ -477,15 +477,15 @@ namespace TicTacToe
                 }
                 else if (Orient == Orientation.Vertical)
                 {
-                    Rotate(2);
-                    Reflect(Orientation.Horizontal);
                     Rotate(-2);
+                    Reflect(Orientation.Horizontal);
+                    Rotate(2);
                 }
                 else if (Orient == Orientation.Downward)
                 {
-                    Rotate(1);
+                    Rotate(-3);
                     Reflect(Orientation.Horizontal);
-                    Rotate(-1);
+                    Rotate(3);
                 }
             }
             public void ClearParse()
@@ -815,7 +815,7 @@ namespace TicTacToe
         }
         #endregion
         #region event-handlers
-        private void ButtonSwitch_Click(object sender, EventArgs e)
+        private void ButtonSwitchClick(object sender, EventArgs e)
         {
             if (LstMo != Mode.StartupMode)
             {
@@ -826,7 +826,7 @@ namespace TicTacToe
                 NewGame(Mode.ConjugateMode);
             }
         }
-        private void ButtonReset_Click(object sender, EventArgs e)
+        private void ButtonResetClick(object sender, EventArgs e)
         {
             if (LstMo != Mode.StartupMode)
             {
@@ -839,11 +839,11 @@ namespace TicTacToe
                 NewGame(Mode.StartupMode);
             }
         }
-        private void MainForm_Load(object sender, EventArgs e)
+        private void MainWindowLoad(object sender, EventArgs e)
         {
             NewGame(Mode.StartupMode);
         }
-        private void Button_KeyDown(object sender, KeyEventArgs e)
+        private void ButtonChessKeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.W)
             {
@@ -868,7 +868,7 @@ namespace TicTacToe
                 NewGame(Bo.ConfigureMode);
             }
         }
-        private void Button_Click(object sender, EventArgs e)
+        private void ButtonChessClick(object sender, EventArgs e)
         {
             PutChess(sender as Control);
         }
