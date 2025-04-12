@@ -387,8 +387,10 @@ public class MainWindow extends JDialog {
         }
         @Override
         public String toString() {
-            StringBuilder Rst = new StringBuilder();
-            Rst.append("[ ");
+            StringBuilder Rst = new StringBuilder(20);
+            Rst.append("{ ");
+            Rst.append(Integer.toHexString(getRound()).toUpperCase());
+            Rst.append(" } [ ");
             for (int i = 1; i <= 9; ++i) {
                 if (get(i) == Chess.None) { Rst.append("?"); }
                 else if (get(i) == Chess.X) { Rst.append("X"); }
@@ -396,7 +398,9 @@ public class MainWindow extends JDialog {
                 else if (get(i) == Chess.Preferred) { Rst.append("+"); }
                 if (i == 3 || i == 6) { Rst.append(", "); }
             }
-            Rst.append(" ]");
+            Rst.append(" ] ( ");
+            Rst.append(Integer.toBinaryString(getState() + 0x10).substring(1));
+            Rst.append(" )");
             return Rst.toString();
         }
         public Board clone() {
