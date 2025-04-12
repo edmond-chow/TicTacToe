@@ -36,6 +36,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 namespace TicTacToe
 {
@@ -357,7 +358,7 @@ namespace TicTacToe
                 Data = 0u;
                 this.Case = Case;
             }
-            public List<int> LocateChesses(Chess Chess)
+            public List<int> LocateChess(Chess Chess)
             {
                 List<int> Rst = new List<int>(9);
                 for (int i = 1; i <= 9; ++i)
@@ -366,7 +367,7 @@ namespace TicTacToe
                 }
                 return Rst;
             }
-            public Board[] Parses(uint State)
+            public Board[] ParseState(uint State)
             {
                 bool C1 = (State & P1) == P1;
                 bool C2 = (State & P2) == P2;
@@ -431,16 +432,22 @@ namespace TicTacToe
             }
             public override string ToString()
             {
-                string Rst = "[ ";
+                StringBuilder Rst = new StringBuilder(20);
+                Rst.Append("{ ");
+                Rst.Append(Convert.ToString(State, 16).ToUpper());
+                Rst.Append(" } [ ");
                 for (int i = 1; i <= 9; ++i)
                 {
-                    if (this[i] == Chess.None) { Rst += "?"; }
-                    else if (this[i] == Chess.X) { Rst += "X"; }
-                    else if (this[i] == Chess.O) { Rst += "O"; }
-                    else if (this[i] == Chess.Preferred) { Rst += "+"; }
-                    if (i == 3 || i == 6) { Rst += ", "; }
+                    if (this[i] == Chess.None) { Rst.Append("?"); }
+                    else if (this[i] == Chess.X) { Rst.Append("X"); }
+                    else if (this[i] == Chess.O) { Rst.Append("O"); }
+                    else if (this[i] == Chess.Preferred) { Rst.Append("+"); }
+                    if (i == 3 || i == 6) { Rst.Append(", "); }
                 }
-                return Rst += " ]";
+                Rst.Append(" ] ( ");
+                Rst.Append(Convert.ToString(State, 2).PadLeft(4, '0'));
+                Rst.Append(" )");
+                return Rst.ToString();
             }
             public void Rotate(int Moves)
             {
@@ -513,7 +520,7 @@ namespace TicTacToe
             public Pack(uint Source)
             {
                 Data = Source;
-                Parses = new Board(Source).Parses(Source >> 24);
+                Parses = new Board(Source).ParseState(Source >> 24);
             }
         }
         #endregion
@@ -674,7 +681,7 @@ namespace TicTacToe
             {
                 if ((Bo.Case & Mask[i].Case) == Case[i].Sanitizer.Case)
                 {
-                    ChooseChess(Case[i].LocateChesses(Chess.Preferred));
+                    ChooseChess(Case[i].LocateChess(Chess.Preferred));
                     return true;
                 }
             }
@@ -707,7 +714,7 @@ namespace TicTacToe
             if (ProcessResponse(PWonCM, PMaskCM)) { return; }
             if (ProcessResponse(PWonSN, PMaskSN)) { return; }
             if (ProcessResponse(PWonSM, PMaskSM)) { return; }
-            ChooseChess(Bo.LocateChesses(Chess.None));
+            ChooseChess(Bo.LocateChess(Chess.None));
         }
         private bool ProcessResult(Board[] Case, Board[] Mask, Result Result)
         {
