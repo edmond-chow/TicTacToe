@@ -40,7 +40,7 @@ using System.Text;
 using System.Windows.Forms;
 namespace TicTacToe
 {
-    public partial class MainForm : Form
+    public partial class MainWindow : Form
     {
         #region helper-classes
         private enum Mode : uint
@@ -545,7 +545,7 @@ namespace TicTacToe
         private static readonly Pack LostSM;
         private static readonly Pack MaskSM;
         private static readonly Pack[] Cases;
-        static MainForm()
+        static MainWindow()
         {
             MaskA = new Pack(0b1111_00111111_00111111_00111111u);
             WonC = new Pack(0b0011_00001000_00001000_00001000u);
@@ -665,7 +665,7 @@ namespace TicTacToe
         }
         #endregion
         #region constructors-and-methods
-        public MainForm()
+        public MainWindow()
         {
             InitializeComponent();
             LstMo = Mode.StartupMode;
@@ -689,10 +689,10 @@ namespace TicTacToe
         }
         private void CheckResponse()
         {
-            Board[] PMask = MaskA.Boards;
+            Board[] PMaskA = MaskA.Boards;
             foreach (Pack Case in Cases)
             {
-                if (ProcessResponse(Case.Boards, PMask)) { return; }
+                if (ProcessResponse(Case.Boards, PMaskA)) { return; }
             }
             Board[] PWonCN = WonCN.Boards;
             Board[] PLostCN = LostCN.Boards;
