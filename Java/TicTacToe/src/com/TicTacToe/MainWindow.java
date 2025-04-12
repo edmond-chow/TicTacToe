@@ -429,13 +429,13 @@ public class MainWindow extends JDialog {
                 reflect(Orientation.Horizontal);
                 rotate(1);
             } else if (Orient == Orientation.Vertical) {
-                rotate(2);
-                reflect(Orientation.Horizontal);
                 rotate(-2);
-            } else if (Orient == Orientation.Downward) {
-                rotate(1);
                 reflect(Orientation.Horizontal);
-                rotate(-1);
+                rotate(2);
+            } else if (Orient == Orientation.Downward) {
+                rotate(-3);
+                reflect(Orientation.Horizontal);
+                rotate(3);
             }
         }
         public void clearParse() {
