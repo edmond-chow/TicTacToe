@@ -38,7 +38,7 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-public class MainForm extends JDialog {
+public class MainWindow extends JDialog {
     private enum Mode {
         Attacker(0),
         Defender(1),
@@ -324,14 +324,14 @@ public class MainForm extends JDialog {
             Data = 0;
             setCase(match);
         }
-        public ArrayList<Integer> locateChesses(Chess chess) {
+        public ArrayList<Integer> locateChess(Chess chess) {
             ArrayList<Integer> Rst = new ArrayList<Integer>(9);
             for (int i = 1; i <= 9; ++i) {
                 if (get(i) == chess) { Rst.add(i); }
             }
             return Rst;
         }
-        public Board[] parses(int state)
+        public Board[] parseState(int state)
         {
             boolean C1 = (state & P1) == P1;
             boolean C2 = (state & P2) == P2;
@@ -458,7 +458,7 @@ public class MainForm extends JDialog {
         }
         public Pack(int Source) {
             Data = Source;
-            Parses = new Board(Source).parses(Source >>> 24);
+            Parses = new Board(Source).parseState(Source >>> 24);
         }
     }
     private static final Pack MaskA = new Pack(0b1111_00111111_00111111_00111111);
@@ -702,14 +702,14 @@ public class MainForm extends JDialog {
         ButtonSwitch.addKeyListener(new ChessListener());
         ButtonReset.addKeyListener(new ChessListener());
     }
-    public MainForm() {
+    public MainWindow() {
         super((JDialog)null);
         initializeComponent();
         LstMo = Mode.StartupMode;
         Bo = new Board(Mode.Attacker);
         Co = new Container[] { this, Button1, Button2, Button3, Button4, Button5, Button6, Button7, Button8, Button9, ButtonSwitch, ButtonReset };
     }
-    public static void run(MainForm form) {
+    public static void runLoop(MainWindow form) {
         form.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         form.setVisible(true);
     }
@@ -719,16 +719,16 @@ public class MainForm extends JDialog {
     private boolean processResponse(Board[] match, Board[] mask) {
         for (int i = 0; i < match.length; ++i) {
             if ((Bo.getCase() & mask[i].getCase()) == match[i].getSanitizer().getCase()) {
-                chooseChess(match[i].locateChesses(Chess.Preferred));
+                chooseChess(match[i].locateChess(Chess.Preferred));
                 return true;
             }
         }
         return false;
     }
     private void checkResponse() {
-        Board[] PMask = MaskA.getBoards();
+        Board[] PMaskA = MaskA.getBoards();
         for (Pack match : Cases) {
-            if (processResponse(match.getBoards(), PMask)) { return; }
+            if (processResponse(match.getBoards(), PMaskA)) { return; }
         }
         Board[] PWonCN = WonCN.getBoards();
         Board[] PLostCN = LostCN.getBoards();
@@ -750,7 +750,7 @@ public class MainForm extends JDialog {
         if (processResponse(PWonCM, PMaskCM)) { return; }
         if (processResponse(PWonSN, PMaskSN)) { return; }
         if (processResponse(PWonSM, PMaskSM)) { return; }
-        chooseChess(Bo.locateChesses(Chess.None));
+        chooseChess(Bo.locateChess(Chess.None));
     }
     private boolean processResult(Board[] match, Board[] mask, Result result) {
         for (int i = 0; i < match.length; ++i) {
