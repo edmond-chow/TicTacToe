@@ -35,6 +35,6 @@
 package com.TicTacToe;
 public class Main {
     public static void main(String[] args) {
-	    MainForm.run(new MainForm());
+	    MainWindow.runLoop(new MainWindow());
     }
 }
