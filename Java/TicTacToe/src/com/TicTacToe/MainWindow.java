@@ -152,8 +152,8 @@ public class MainWindow extends JDialog {
     private static class Board {
         private static final int MaskFst3 = 0x3F00;
         private static final int Box = 0b11;
-        private static final int Conjg = 0b1;
-        private static final int Confg = 0b10;
+        private static final int Conj = 0b1;
+        private static final int Conf = 0b10;
         private static final int P1 = 0b1;
         private static final int P2 = 0b10;
         private static final int P4 = 0b100;
@@ -192,16 +192,16 @@ public class MainWindow extends JDialog {
             Data |= (value.toInt() << Offset[IMode]) & Mask[IMode];
         }
         public Mode getConjugateMode() {
-            return Mode.from((getMode().toInt() & Confg) | (~getMode().toInt() & Conjg));
+            return Mode.from((getMode().toInt() & Conf) | (~getMode().toInt() & Conj));
         }
         public Mode getConfigureMode() {
-            return Mode.from((getMode().toInt() & Conjg) | (~getMode().toInt() & Confg));
+            return Mode.from((getMode().toInt() & Conj) | (~getMode().toInt() & Conf));
         }
         public boolean onDefenderSide() {
-            return (getMode().toInt() & Conjg) == Conjg;
+            return (getMode().toInt() & Conj) == Conj;
         }
         public boolean inDebugMode() {
-            return (getMode().toInt() & Confg) == Confg;
+            return (getMode().toInt() & Conf) == Conf;
         }
         public Turn getTurn() {
             return Turn.from((Data & Mask[ITurn]) >>> Offset[ITurn]);
@@ -316,7 +316,7 @@ public class MainWindow extends JDialog {
         }
         public Board(Mode mode) {
             Data = 0;
-            if ((mode.toInt() & Conjg) == 0b0) { setTurn(Turn.User); }
+            if ((mode.toInt() & Conj) == 0b0) { setTurn(Turn.User); }
             else { setTurn(Turn.Response); }
             setMode(mode);
         }
@@ -659,7 +659,7 @@ public class MainWindow extends JDialog {
         setResizable(false);
         setTitle("TicTacToe");
         setLocationRelativeTo(null);
-        setIconImage(new ImageIcon(getClass().getResource( "/TicTacToe.png" )).getImage());
+        setIconImage(new ImageIcon(getClass().getResource( "./TicTacToe.png" )).getImage());
         addWindowListener(new MainListener());
         Button1.addActionListener(new ChessListener());
         Button2.addActionListener(new ChessListener());

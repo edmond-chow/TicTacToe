@@ -87,8 +87,8 @@ namespace TicTacToe
         {
             private const uint MaskFst3 = 0x3F00u;
             private const uint Box = 0b11u;
-            private const uint Conjg = 0b1u;
-            private const uint Confg = 0b10u;
+            private const uint Conj = 0b1u;
+            private const uint Conf = 0b10u;
             private const uint P1 = 0b1u;
             private const uint P2 = 0b10u;
             private const uint P4 = 0b100u;
@@ -142,28 +142,28 @@ namespace TicTacToe
             {
                 get
                 {
-                    return (Mode)(((uint)Mode & Confg) | (~(uint)Mode & Conjg));
+                    return (Mode)(((uint)Mode & Conf) | (~(uint)Mode & Conj));
                 }
             }
             public Mode ConfigureMode
             {
                 get
                 {
-                    return (Mode)(((uint)Mode & Conjg) | (~(uint)Mode & Confg));
+                    return (Mode)(((uint)Mode & Conj) | (~(uint)Mode & Conf));
                 }
             }
             public bool OnDefenderSide
             {
                 get
                 {
-                    return ((uint)Mode & Conjg) == Conjg;
+                    return ((uint)Mode & Conj) == Conj;
                 }
             }
             public bool InDebugMode
             {
                 get
                 {
-                    return ((uint)Mode & Confg) == Confg;
+                    return ((uint)Mode & Conf) == Conf;
                 }
             }
             public Turn Turn
@@ -349,7 +349,7 @@ namespace TicTacToe
             public Board(Mode Mode)
             {
                 Data = 0u;
-                if (((uint)Mode & Conjg) == 0b0u) { Turn = Turn.User; }
+                if (((uint)Mode & Conj) == 0b0u) { Turn = Turn.User; }
                 else { Turn = Turn.Response; }
                 this.Mode = Mode;
             }
