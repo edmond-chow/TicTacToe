@@ -529,20 +529,6 @@ namespace TicTacToe
                     return Data;
                 }
             }
-            public uint Case
-            {
-                get
-                {
-                    return Refer.Case;
-                }
-            }
-            public uint State
-            {
-                get
-                {
-                    return Data >> 24;
-                }
-            }
             public Pack(uint Source)
             {
                 Data = Source & 0xF3F3F3Fu;
