@@ -432,8 +432,14 @@ namespace TicTacToe
             }
             public override string ToString()
             {
-                StringBuilder Rst = new StringBuilder(20);
-                Rst.Append("{ ");
+                StringBuilder Rst = new StringBuilder(100);
+                Rst.Append("Board < ");
+                Rst.Append(Mode.ToString());
+                Rst.Append(", ");
+                Rst.Append(Turn.ToString());
+                Rst.Append(", ");
+                Rst.Append(Result.ToString());
+                Rst.Append(" > { ");
                 Rst.Append(Convert.ToString(Round, 16).ToUpper());
                 Rst.Append(" } [ ");
                 for (int i = 1; i <= 9; ++i)
@@ -446,6 +452,11 @@ namespace TicTacToe
                 }
                 Rst.Append(" ] ( ");
                 Rst.Append(Convert.ToString(State, 2).PadLeft(4, '0'));
+                Rst.Append(", ");
+                Rst.Append(Parse8 ? "↓" : "↑");
+                Rst.Append((Moves * 45).ToString());
+                Rst.Append("°, ");
+                Rst.Append(Orient.ToString());
                 Rst.Append(" )");
                 return Rst.ToString();
             }
@@ -502,6 +513,7 @@ namespace TicTacToe
         private readonly struct Pack
         {
             private readonly uint Data;
+            private readonly Board Refer;
             private readonly Board[] Parses;
             public Board[] Boards
             {
@@ -519,8 +531,26 @@ namespace TicTacToe
             }
             public Pack(uint Source)
             {
-                Data = Source;
-                Parses = new Board(Source).ParseState(Source >> 24);
+                Data = Source & 0xF3F3F3Fu;
+                Refer = new Board(Data);
+                Parses = Refer.ParseState(Data >> 24);
+            }
+            public override string ToString()
+            {
+                StringBuilder Rst = new StringBuilder(100);
+                Rst.Append("Pack [ ");
+                for (int i = 1; i <= 9; ++i)
+                {
+                    if (Refer[i] == Chess.None) { Rst.Append("?"); }
+                    else if (Refer[i] == Chess.X) { Rst.Append("X"); }
+                    else if (Refer[i] == Chess.O) { Rst.Append("O"); }
+                    else if (Refer[i] == Chess.Preferred) { Rst.Append("+"); }
+                    if (i == 3 || i == 6) { Rst.Append(", "); }
+                }
+                Rst.Append(" ] ( ");
+                Rst.Append(Convert.ToString(Data >> 24, 2).PadLeft(4, '0'));
+                Rst.Append(" )");
+                return Rst.ToString();
             }
         }
         #endregion

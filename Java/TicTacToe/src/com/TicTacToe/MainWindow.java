@@ -387,8 +387,14 @@ public class MainWindow extends JDialog {
         }
         @Override
         public String toString() {
-            StringBuilder Rst = new StringBuilder(20);
-            Rst.append("{ ");
+            StringBuilder Rst = new StringBuilder(100);
+            Rst.append("Board < ");
+            Rst.append(getMode().toString());
+            Rst.append(", ");
+            Rst.append(getTurn().toString());
+            Rst.append(", ");
+            Rst.append(getResult().toString());
+            Rst.append(" > { ");
             Rst.append(Integer.toHexString(getRound()).toUpperCase());
             Rst.append(" } [ ");
             for (int i = 1; i <= 9; ++i) {
@@ -400,9 +406,15 @@ public class MainWindow extends JDialog {
             }
             Rst.append(" ] ( ");
             Rst.append(Integer.toBinaryString(getState() + 0x10).substring(1));
+            Rst.append(", ");
+            Rst.append(getParse8() ? "↓" : "↑");
+            Rst.append(Integer.toString(getMoves() * 45));
+            Rst.append("°, ");
+            Rst.append(getOrient().toString());
             Rst.append(" )");
             return Rst.toString();
         }
+        @Override
         public Board clone() {
             Board Rst = new Board(Mode.Attacker);
             Rst.Data = Data;
@@ -449,6 +461,7 @@ public class MainWindow extends JDialog {
     }
     private static class Pack {
         private final int Data;
+        private final Board Refer;
         private final Board[] Parses;
         public Board[] getBoards() {
             Board[] Rst = Parses.clone();
@@ -461,8 +474,26 @@ public class MainWindow extends JDialog {
             return Data;
         }
         public Pack(int Source) {
-            Data = Source;
-            Parses = new Board(Source).parseState(Source >>> 24);
+            Data = Source & 0xF3F3F3F;
+            Refer = new Board(Data);
+            Parses = Refer.parseState(Data >>> 24);
+        }
+        @Override
+        public String toString() {
+            StringBuilder Rst = new StringBuilder(100);
+            Rst.append("Pack [ ");
+            for (int i = 1; i <= 9; ++i)
+            {
+                if (Refer.get(i) == Chess.None) { Rst.append("?"); }
+                else if (Refer.get(i) == Chess.X) { Rst.append("X"); }
+                else if (Refer.get(i) == Chess.O) { Rst.append("O"); }
+                else if (Refer.get(i) == Chess.Preferred) { Rst.append("+"); }
+                if (i == 3 || i == 6) { Rst.append(", "); }
+            }
+            Rst.append(" ] ( ");
+            Rst.append(Integer.toBinaryString((Data >>> 24) + 0x10).substring(1));
+            Rst.append(" )");
+            return Rst.toString();
         }
     }
     private static final Pack MaskA = new Pack(0b1111_00111111_00111111_00111111);
@@ -659,7 +690,7 @@ public class MainWindow extends JDialog {
         setResizable(false);
         setTitle("TicTacToe");
         setLocationRelativeTo(null);
-        setIconImage(new ImageIcon(getClass().getResource( "./TicTacToe.png" )).getImage());
+        setIconImage(new ImageIcon(Objects.requireNonNull(getClass().getResource("/TicTacToe.png"))).getImage());
         addWindowListener(new MainListener());
         Button1.addActionListener(new ChessListener());
         Button2.addActionListener(new ChessListener());
