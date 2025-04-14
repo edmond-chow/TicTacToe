@@ -418,18 +418,12 @@ class Pack:
     @property
     def source(self):
         return self.data
-    @property
-    def case(self):
-        return self.refer.case
-    @property
-    def state(self):
-        return self.data >> 24
     def __init__(self, source: int):
         if type(source) is not int:
             raise TypeError(source)
         self.data = source & 0xF3F3F3F
         self.refer = Board(self.data)
-        self.parses = self.refer.parse_state(self.state)
+        self.parses = self.refer.parse_state(self.data >> 24)
     def __str__(self):
         rst = "Pack [ "
         for i in range(1, 10):
@@ -444,7 +438,7 @@ class Pack:
             if i == 3 or i == 6:
                 rst += ", "
         rst += " ] ( "
-        rst += bin(self.state)
+        rst += bin(self.data >> 24)
         rst += " )"
         return rst
 mask_a: Final[Pack] = Pack(0b1111_00111111_00111111_00111111)
