@@ -473,16 +473,10 @@ public class MainWindow extends JDialog {
         public int getSource() {
             return Data;
         }
-        public int getCase() {
-            return Refer.getCase();
-        }
-        public int getState() {
-            return Data >>> 24;
-        }
         public Pack(int Source) {
             Data = Source & 0xF3F3F3F;
             Refer = new Board(Data);
-            Parses = Refer.parseState(Source >>> 24);
+            Parses = Refer.parseState(Data >>> 24);
         }
         @Override
         public String toString() {
@@ -497,7 +491,7 @@ public class MainWindow extends JDialog {
                 if (i == 3 || i == 6) { Rst.append(", "); }
             }
             Rst.append(" ] ( ");
-            Rst.append(Integer.toBinaryString((Data >> 24) + 0x10).substring(1));
+            Rst.append(Integer.toBinaryString((Data >>> 24) + 0x10).substring(1));
             Rst.append(" )");
             return Rst.toString();
         }
