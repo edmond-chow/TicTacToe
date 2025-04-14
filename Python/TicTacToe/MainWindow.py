@@ -337,8 +337,14 @@ class Board:
                 rst[i].parse8 = not v8
         return rst
     def __str__(self):
-        rst = "{ "
-        rst += hex(self.round).upper()
+        rst = "Board < "
+        rst += str(self.mode)
+        rst += ", "
+        rst += str(self.turn)
+        rst += ", "
+        rst += str(self.result)
+        rst += " > { "
+        rst += hex(self.round)
         rst += " } [ "
         for i in range(1, 10):
             if self[i] == Chess.Empty:
@@ -352,7 +358,15 @@ class Board:
             if i == 3 or i == 6:
                 rst += ", "
         rst += " ] ( "
-        rst += bin(self.state + 0x10)[1:]
+        rst += bin(self.state)
+        rst += ", "
+        if self.parse8:
+            rst += "↓"
+        else:
+            rst += "↑"
+        rst += str(self.moves * 45)
+        rst += "°, "
+        rst += str(self.orient)
         rst += " )"
         return rst
     def rotate(self, moves: int):
@@ -404,11 +418,35 @@ class Pack:
     @property
     def source(self):
         return self.data
+    @property
+    def case(self):
+        return self.refer.case
+    @property
+    def state(self):
+        return self.data >> 24
     def __init__(self, source: int):
         if type(source) is not int:
             raise TypeError(source)
-        self.data = source
-        self.parses = Board(source).parse_state(source >> 24)
+        self.data = source & 0xF3F3F3F
+        self.refer = Board(self.data)
+        self.parses = self.refer.parse_state(self.state)
+    def __str__(self):
+        rst = "Pack [ "
+        for i in range(1, 10):
+            if self.refer[i] == Chess.Empty:
+                rst += "?"
+            elif self.refer[i] == Chess.X:
+                rst += "X"
+            elif self.refer[i] == Chess.O:
+                rst += "O"
+            elif self.refer[i] == Chess.Preferred:
+                rst += "+"
+            if i == 3 or i == 6:
+                rst += ", "
+        rst += " ] ( "
+        rst += bin(self.state)
+        rst += " )"
+        return rst
 mask_a: Final[Pack] = Pack(0b1111_00111111_00111111_00111111)
 won_c: Final[Pack] = Pack(0b0011_00001000_00001000_00001000)
 lost_c: Final[Pack] = Pack(0b0011_00000100_00000100_00000100)
