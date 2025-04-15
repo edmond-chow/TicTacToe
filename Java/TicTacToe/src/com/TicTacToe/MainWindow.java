@@ -527,7 +527,7 @@ public class MainWindow extends JDialog {
             Boxes BWon = new Boxes(Code);
             Boxes BLost = new Boxes(Code);
             Boxes BMask = new Boxes(Code);
-            for (int i = 0; i < 11; ++i)
+            for (int i = 0; i <= 10; ++i)
             {
                 if (BWon.get(i) == 0b01) { BWon.set(i, 0b00); }
                 if (BLost.get(i) == 0b01) { BLost.set(i, 0b00); }
@@ -544,7 +544,7 @@ public class MainWindow extends JDialog {
             Boxes BData = new Boxes(Data);
             StringBuilder Rst = new StringBuilder(100);
             Rst.append("Tuple [ ");
-            for (int i = 0; i < 11; ++i)
+            for (int i = 10; i >= 0; --i)
             {
                 if (i == 3 || i == 7) { Rst.append(", "); }
                 else if (BData.get(i) == 0b00) { Rst.append("_"); }
