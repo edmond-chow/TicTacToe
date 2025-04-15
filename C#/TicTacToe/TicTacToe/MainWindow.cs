@@ -569,7 +569,7 @@ namespace TicTacToe
                 {
                     i %= 16;
                     if (i < 0) { i += 16; }
-                    Data &= ~(Box << i);
+                    Data &= ~(Box << (i * 2));
                     Data |= (value & Box) << (i * 2);
                 }
             }
