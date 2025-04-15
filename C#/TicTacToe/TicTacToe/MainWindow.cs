@@ -383,7 +383,7 @@ namespace TicTacToe
                 if (C4) { Sz *= 2; }
                 if (C8) { Sz *= 2; }
                 Board[] Rst = new Board[Sz];
-                for (int i = 0; i < Rst.Length; ++i)
+                for (int i = 0; i < Sz; ++i)
                 {
                     Rst[i] = this;
                 }
@@ -392,7 +392,7 @@ namespace TicTacToe
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Rst.Length; ++i)
+                    for (int i = Dy; i < Sz; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
                         Rst[i].Parse1 = !V1;
@@ -402,7 +402,7 @@ namespace TicTacToe
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Rst.Length; ++i)
+                    for (int i = Dy; i < Sz; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
                         Rst[i].Parse2 = !V2;
@@ -412,7 +412,7 @@ namespace TicTacToe
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Rst.Length; ++i)
+                    for (int i = Dy; i < Sz; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
                         Rst[i].Parse4 = !V4;
@@ -422,7 +422,7 @@ namespace TicTacToe
                 {
                     int Dy = Dx;
                     Dx *= 2;
-                    for (int i = Dy; i < Rst.Length; ++i)
+                    for (int i = Dy; i < Sz; ++i)
                     {
                         if (i % Dx == 0) { i += Dy; }
                         Rst[i].Parse8 = !V8;
@@ -464,7 +464,7 @@ namespace TicTacToe
             {
                 Moves %= 8;
                 if (Moves < 0) { Moves += 8; }
-                uint Nears = (Data & 0xFFFFu) << Moves * 2;
+                uint Nears = (Data & 0xFFFFu) << (Moves * 2);
                 Nears |= (Nears & 0xFFFF0000u) >> 16;
                 Data = (Data & 0xFFFF0000u) | (Nears & 0xFFFFu);
             }
@@ -556,24 +556,21 @@ namespace TicTacToe
         private struct Boxes
         {
             private const uint Box = 0b11u;
-            private const int Cnt = 16;
             private uint Data;
             public uint this[int i]
             {
                 get
                 {
-                    i %= Cnt;
-                    if (i < 0) { i += Cnt; }
-                    i *= 2;
-                    return (Data >> i) & Box;
+                    i %= 16;
+                    if (i < 0) { i += 16; }
+                    return (Data >> (i * 2)) & Box;
                 }
                 set
                 {
-                    i %= Cnt;
-                    if (i < 0) { i += Cnt; }
-                    i *= 2;
+                    i %= 16;
+                    if (i < 0) { i += 16; }
                     Data &= ~(Box << i);
-                    Data |= (value & Box) << i;
+                    Data |= (value & Box) << (i * 2);
                 }
             }
             public uint Values
@@ -590,17 +587,17 @@ namespace TicTacToe
         }
         private readonly struct Tuple
         {
-            public readonly Boxes Data;
+            public readonly uint Data;
             public readonly Pack Won;
             public readonly Pack Lost;
             public readonly Pack Mask;
             public Tuple(uint Code)
             {
-                Data = new Boxes(Code & 0xF3F3F3Fu);
+                Data = Code & 0xF3F3F3Fu;
                 Boxes BWon = new Boxes(Code);
                 Boxes BLost = new Boxes(Code);
                 Boxes BMask = new Boxes(Code);
-                for (int i = 0; i < 11; ++i)
+                for (int i = 0; i <= 10; ++i)
                 {
                     if (BWon[i] == 0b01u) { BWon[i] = 0b00u; }
                     if (BLost[i] == 0b01u) { BLost[i] = 0b00u; }
@@ -614,18 +611,19 @@ namespace TicTacToe
             }
             public override string ToString()
             {
+                Boxes BData = new Boxes(Data);
                 StringBuilder Rst = new StringBuilder(100);
                 Rst.Append("Tuple [ ");
-                for (int i = 0; i < 11; ++i)
+                for (int i = 10; i >= 0; --i)
                 {
                     if (i == 3 || i == 7) { Rst.Append(", "); }
-                    else if (Data[i] == 0b00u) { Rst.Append("_"); }
-                    else if (Data[i] == 0b01u) { Rst.Append("~"); }
-                    else if (Data[i] == 0b10u) { Rst.Append("$"); }
-                    else if (Data[i] == 0b11u) { Rst.Append("+"); }
+                    else if (BData[i] == 0b00u) { Rst.Append("_"); }
+                    else if (BData[i] == 0b01u) { Rst.Append("~"); }
+                    else if (BData[i] == 0b10u) { Rst.Append("$"); }
+                    else if (BData[i] == 0b11u) { Rst.Append("+"); }
                 }
                 Rst.Append(" ] ( 0b");
-                Rst.Append(Convert.ToString(Data.Values >> 24, 2).PadLeft(4, '0'));
+                Rst.Append(Convert.ToString(Data >> 24, 2).PadLeft(4, '0'));
                 Rst.Append(" )");
                 return Rst.ToString();
             }
