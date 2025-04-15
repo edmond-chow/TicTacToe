@@ -87,7 +87,7 @@ public class MainWindow extends JDialog {
         }
     }
     private enum Result {
-        None(0),
+        Empty(0),
         Won(1),
         Lost(2),
         Tied(3);
@@ -104,7 +104,7 @@ public class MainWindow extends JDialog {
                     return v;
                 }
             }
-            return Result.None;
+            return Result.Empty;
         }
     }
     private enum Chess {
@@ -388,28 +388,28 @@ public class MainWindow extends JDialog {
         @Override
         public String toString() {
             StringBuilder Rst = new StringBuilder(100);
-            Rst.append("Board < ");
+            Rst.append("Board < Mode.");
             Rst.append(getMode().toString());
-            Rst.append(", ");
+            Rst.append(", Turn.");
             Rst.append(getTurn().toString());
-            Rst.append(", ");
+            Rst.append(", Result.");
             Rst.append(getResult().toString());
-            Rst.append(" > { ");
+            Rst.append(" > { 0x");
             Rst.append(Integer.toHexString(getRound()).toUpperCase());
             Rst.append(" } [ ");
             for (int i = 1; i <= 9; ++i) {
-                if (get(i) == Chess.None) { Rst.append("?"); }
+                if (get(i) == Chess.None) { Rst.append("_"); }
                 else if (get(i) == Chess.X) { Rst.append("X"); }
                 else if (get(i) == Chess.O) { Rst.append("O"); }
                 else if (get(i) == Chess.Preferred) { Rst.append("+"); }
                 if (i == 3 || i == 6) { Rst.append(", "); }
             }
-            Rst.append(" ] ( ");
-            Rst.append(Integer.toBinaryString(getState() + 0x10).substring(1));
+            Rst.append(" ] ( 0b");
+            Rst.append(String.format("%4s", Integer.toBinaryString(getState())).replace(" ", "0"));
             Rst.append(", ");
             Rst.append(getParse8() ? "↓" : "↑");
             Rst.append(Integer.toString(getMoves() * 45));
-            Rst.append("°, ");
+            Rst.append("°, Orientation.");
             Rst.append(getOrient().toString());
             Rst.append(" )");
             return Rst.toString();
@@ -484,54 +484,108 @@ public class MainWindow extends JDialog {
             Rst.append("Pack [ ");
             for (int i = 1; i <= 9; ++i)
             {
-                if (Refer.get(i) == Chess.None) { Rst.append("?"); }
+                if (Refer.get(i) == Chess.None) { Rst.append("_"); }
                 else if (Refer.get(i) == Chess.X) { Rst.append("X"); }
                 else if (Refer.get(i) == Chess.O) { Rst.append("O"); }
                 else if (Refer.get(i) == Chess.Preferred) { Rst.append("+"); }
                 if (i == 3 || i == 6) { Rst.append(", "); }
             }
-            Rst.append(" ] ( ");
-            Rst.append(Integer.toBinaryString((Data >>> 24) + 0x10).substring(1));
+            Rst.append(" ] ( 0b");
+            Rst.append(String.format("%4s", Integer.toBinaryString(Data >>> 24)).replace(" ", "0"));
             Rst.append(" )");
             return Rst.toString();
         }
     }
-    private static final Pack MaskA = new Pack(0b1111_00111111_00111111_00111111);
-    private static final Pack WonC = new Pack(0b0011_00001000_00001000_00001000);
-    private static final Pack LostC = new Pack(0b0011_00000100_00000100_00000100);
-    private static final Pack MaskC = new Pack(0b0011_00001100_00001100_00001100);
-    private static final Pack WonS = new Pack(0b0110_00100000_00100000_00100000);
-    private static final Pack LostS = new Pack(0b0110_00010000_00010000_00010000);
-    private static final Pack MaskS = new Pack(0b0110_00110000_00110000_00110000);
-    private static final Pack WonCN = new Pack(0b0111_00001000_00001000_00001100);
-    private static final Pack LostCN = new Pack(0b0111_00000100_00000100_00001100);
-    private static final Pack MaskCN = new Pack(0b0111_00001100_00001100_00001100);
-    private static final Pack WonCM = new Pack(0b0011_00001000_00001100_00001000);
-    private static final Pack LostCM = new Pack(0b0011_00000100_00001100_00000100);
-    private static final Pack MaskCM = new Pack(0b0011_00001100_00001100_00001100);
-    private static final Pack WonSN = new Pack(0b1110_00100000_00100000_00110000);
-    private static final Pack LostSN = new Pack(0b1110_00010000_00010000_00110000);
-    private static final Pack MaskSN = new Pack(0b1110_00110000_00110000_00110000);
-    private static final Pack WonSM = new Pack(0b0110_00100000_00110000_00100000);
-    private static final Pack LostSM = new Pack(0b0110_00010000_00110000_00010000);
-    private static final Pack MaskSM = new Pack(0b0110_00110000_00110000_00110000);
+    private static class Boxes {
+        private final int Box = 0b11;
+        private final int Cnt = 16;
+        private int Data;
+        public int get(int i) {
+            i %= Cnt;
+            if (i < 0) { i += Cnt; }
+            i *= 2;
+            return (Data >>> i) & Box;
+        }
+        public void set(int i, int value) {
+            i %= Cnt;
+            if (i < 0) { i += Cnt; }
+            i *= 2;
+            Data &= ~(Box << i);
+            Data |= (value & Box) << i;
+        }
+        public int getValues() {
+            return Data;
+        }
+        public Boxes(int Values) {
+            Data = Values;
+        }
+    }
+    private static class Tuple {
+        public final int Data;
+        public final Pack Won;
+        public final Pack Lost;
+        public final Pack Mask;
+        public Tuple(int Code) {
+            Data = Code & 0xF3F3F3F;
+            Boxes BWon = new Boxes(Code);
+            Boxes BLost = new Boxes(Code);
+            Boxes BMask = new Boxes(Code);
+            for (int i = 0; i < 11; ++i)
+            {
+                if (BWon.get(i) == 0b01) { BWon.set(i, 0b00); }
+                if (BLost.get(i) == 0b01) { BLost.set(i, 0b00); }
+                else if (BLost.get(i) == 0b10) { BLost.set(i, 0b01); }
+                if (BMask.get(i) == 0b01) { BMask.set(i, 0b00); }
+                else { BMask.set(i, 0b11); }
+            }
+            Won = new Pack((BWon.getValues() & 0x3F3F3F) | (Code & 0xF000000));
+            Lost = new Pack((BLost.getValues() & 0x3F3F3F) | (Code & 0xF000000));
+            Mask = new Pack((BMask.getValues() & 0x3F3F3F) | (Code & 0xF000000));
+        }
+        @Override
+        public String toString() {
+            StringBuilder Rst = new StringBuilder(100);
+            Rst.append("Tuple [ ");
+            Boxes BData = new Boxes(Data);
+            for (int i = 0; i < 11; ++i)
+            {
+                if (i == 3 || i == 7) { Rst.append(", "); }
+                else if (BData.get(i) == 0b00) { Rst.append("_"); }
+                else if (BData.get(i) == 0b01) { Rst.append("~"); }
+                else if (BData.get(i) == 0b10) { Rst.append("$"); }
+                else if (BData.get(i) == 0b11) { Rst.append("+"); }
+            }
+            Rst.append(" ] ( 0b");
+            Rst.append(String.format("%4s", Integer.toBinaryString(Data >>> 24)).replace(" ", "0"));
+            Rst.append(" )");
+            return Rst.toString();
+        }
+    }
+    private static final Tuple[] ZeroSurvive = new Tuple[] {
+        new Tuple(0b0011_00011001_00011001_00011001),
+        new Tuple(0b0110_00100101_00100101_00100101),
+    };
+    private static final Tuple[] SingleSurvive = new Tuple[] {
+        new Tuple(0b0011_00011001_00011101_00011001),
+        new Tuple(0b0111_00011001_00011001_00011101),
+        new Tuple(0b0110_00100101_00110101_00100101),
+        new Tuple(0b1110_00100101_00100101_00110101),
+    };
+    private static final Tuple[] DoubleSurvive = new Tuple[] {
+        new Tuple(0b1110_00010111_00011010_00000100),
+        new Tuple(0b1110_00010111_00011000_00000110),
+        new Tuple(0b1110_00010111_00010010_00100100),
+        new Tuple(0b1110_00010111_00010000_00100110),
+        new Tuple(0b0110_00001011_00010110_00010100),
+        new Tuple(0b0110_00100011_00010110_00010100),
+        new Tuple(0b0110_00001011_00010100_00010110),
+        new Tuple(0b0110_00100011_00010100_00010110),
+    };
     private static final Pack[] Cases = new Pack[] {
         new Pack(0b0000_00110011_00001100_00110011),
         new Pack(0b0111_00001000_00001100_00000000),
-        new Pack(0b0110_00001100_00110111_00111011),
-        new Pack(0b0110_00011111_00111000_00110000),
-        new Pack(0b0110_00011100_00111111_00001110),
-        new Pack(0b1110_00011011_00110011_00111111),
-        new Pack(0b1110_00011110_00001111_00001100),
-        new Pack(0b1110_00111101_00100011_00111111),
-        new Pack(0b0010_00100011_00000100_00110010),
-        new Pack(0b0110_00001000_00100111_00001111),
-        new Pack(0b0110_00011100_00111011_00001110),
-        new Pack(0b1110_00110010_00100100_00111100),
-        new Pack(0b1110_00000010_00100101_00000011),
-        new Pack(0b1110_00001101_00110110_00101111),
-        new Pack(0b1110_00011110_00101111_00011100),
     };
+    private static final Pack MaskA = new Pack(0b1111_00111111_00111111_00111111);
     private final Container[] Co;
     private Mode LstMo;
     private String getShownText() {
@@ -573,7 +627,7 @@ public class MainWindow extends JDialog {
     }
     private void setRe(Result value) {
         if (Bo.getResult() == value) { return; }
-        if (value == Result.None) {
+        if (value == Result.Empty) {
             Bo = new Board(Bo.getMode());
         } else {
             Bo.setTurn(Turn.Terminated);
@@ -761,30 +815,25 @@ public class MainWindow extends JDialog {
         return false;
     }
     private void checkResponse() {
-        Board[] PMaskA = MaskA.getBoards();
-        for (Pack match : Cases) {
-            if (processResponse(match.getBoards(), PMaskA)) { return; }
+        for (Pack P : Cases) {
+            if (processResponse(P.getBoards(), MaskA.getBoards())) { return; }
         }
-        Board[] PWonCN = WonCN.getBoards();
-        Board[] PLostCN = LostCN.getBoards();
-        Board[] PMaskCN = MaskCN.getBoards();
-        Board[] PWonCM = WonCM.getBoards();
-        Board[] PLostCM = LostCM.getBoards();
-        Board[] PMaskCM = MaskCM.getBoards();
-        Board[] PWonSN = WonSN.getBoards();
-        Board[] PLostSN = LostSN.getBoards();
-        Board[] PMaskSN = MaskSN.getBoards();
-        Board[] PWonSM = WonSM.getBoards();
-        Board[] PLostSM = LostSM.getBoards();
-        Board[] PMaskSM = MaskSM.getBoards();
-        if (processResponse(PLostCN, PMaskCN)) { return; }
-        if (processResponse(PLostCM, PMaskCM)) { return; }
-        if (processResponse(PLostSN, PMaskSN)) { return; }
-        if (processResponse(PLostSM, PMaskSM)) { return; }
-        if (processResponse(PWonCN, PMaskCN)) { return; }
-        if (processResponse(PWonCM, PMaskCM)) { return; }
-        if (processResponse(PWonSN, PMaskSN)) { return; }
-        if (processResponse(PWonSM, PMaskSM)) { return; }
+        for (Tuple T : SingleSurvive)
+        {
+            if (processResponse(T.Lost.getBoards(), T.Mask.getBoards())) { return; }
+        }
+        for (Tuple T : SingleSurvive)
+        {
+            if (processResponse(T.Won.getBoards(), T.Mask.getBoards())) { return; }
+        }
+        for (Tuple T : DoubleSurvive)
+        {
+            if (processResponse(T.Lost.getBoards(), T.Mask.getBoards())) { return; }
+        }
+        for (Tuple T : DoubleSurvive)
+        {
+            if (processResponse(T.Won.getBoards(), T.Mask.getBoards())) { return; }
+        }
         chooseChess(Bo.locateChess(Chess.None));
     }
     private boolean processResult(Board[] match, Board[] mask, Result result) {
@@ -797,17 +846,15 @@ public class MainWindow extends JDialog {
         return false;
     }
     private void checkResult() {
-        if (getRe() != Result.None) { return; }
-        Board[] PWonC = WonC.getBoards();
-        Board[] PLostC = LostC.getBoards();
-        Board[] PMaskC = MaskC.getBoards();
-        Board[] PWonS = WonS.getBoards();
-        Board[] PLostS = LostS.getBoards();
-        Board[] PMaskS = MaskS.getBoards();
-        if (processResult(PWonC, PMaskC, Result.Won)) { return; }
-        if (processResult(PWonS, PMaskS, Result.Won)) { return; }
-        if (processResult(PLostC, PMaskC, Result.Lost)) { return; }
-        if (processResult(PLostS, PMaskS, Result.Lost)) { return; }
+        if (getRe() != Result.Empty) { return; }
+        for (Tuple T : ZeroSurvive)
+        {
+            if (processResult(T.Lost.getBoards(), T.Mask.getBoards(), Result.Lost)) { return; }
+        }
+        for (Tuple T : ZeroSurvive)
+        {
+            if (processResult(T.Won.getBoards(), T.Mask.getBoards(), Result.Won)) { return; }
+        }
         if (Bo.getRound() == 9) { setRe(Result.Tied); }
     }
     private void newGame(Mode mode) {
@@ -845,14 +892,14 @@ public class MainWindow extends JDialog {
     private void putChess(Container target) {
         ButtonReset.setEnabled(true);
         int i = Arrays.asList(Co).indexOf(target);
-        if (Bo.get(i) == Chess.None && getRe() == Result.None) {
+        if (Bo.get(i) == Chess.None && getRe() == Result.Empty) {
             if (getTu() == Turn.User) {
                 Bo.set(i, Chess.O);
                 ((AbstractButton)target).setText(" O ");
                 target.setForeground(Green);
                 setTu(Turn.Response);
                 checkResult();
-                if (!Bo.inDebugMode() && getRe() == Result.None)
+                if (!Bo.inDebugMode() && getRe() == Result.Empty)
                 {
                     checkResponse();
                     checkResult();
