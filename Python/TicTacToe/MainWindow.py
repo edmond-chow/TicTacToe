@@ -343,12 +343,12 @@ class Board:
         rst += str(self.turn)
         rst += ", "
         rst += str(self.result)
-        rst += " > { "
-        rst += hex(self.round)
+        rst += " > { 0x"
+        rst += '{:X}'.format(self.round)
         rst += " } [ "
         for i in range(1, 10):
             if self[i] == Chess.Empty:
-                rst += "?"
+                rst += "_"
             elif self[i] == Chess.X:
                 rst += "X"
             elif self[i] == Chess.O:
@@ -357,8 +357,8 @@ class Board:
                 rst += "+"
             if i == 3 or i == 6:
                 rst += ", "
-        rst += " ] ( "
-        rst += bin(self.state)
+        rst += " ] ( 0b"
+        rst += '{:04b}'.format(self.state)
         rst += ", "
         if self.parse8:
             rst += "↓"
@@ -375,7 +375,7 @@ class Board:
         moves %= 8
         if moves < 0:
             moves += 8
-        nears = (self.data & 0xFFFF) << moves * 2
+        nears = (self.data & 0xFFFF) << (moves * 2)
         nears |= (nears & 0xFFFF0000) >> 16
         self.data = (self.data & 0xFFFF0000) | (nears & 0xFFFF)
     def reflect(self, orient: Orientation):
@@ -428,7 +428,7 @@ class Pack:
         rst = "Pack [ "
         for i in range(1, 10):
             if self.refer[i] == Chess.Empty:
-                rst += "?"
+                rst += "_"
             elif self.refer[i] == Chess.X:
                 rst += "X"
             elif self.refer[i] == Chess.O:
@@ -437,46 +437,90 @@ class Pack:
                 rst += "+"
             if i == 3 or i == 6:
                 rst += ", "
-        rst += " ] ( "
-        rst += bin(self.data >> 24)
+        rst += " ] ( 0b"
+        rst += '{:04b}'.format(self.data >> 24)
         rst += " )"
         return rst
-mask_a: Final[Pack] = Pack(0b1111_00111111_00111111_00111111)
-won_c: Final[Pack] = Pack(0b0011_00001000_00001000_00001000)
-lost_c: Final[Pack] = Pack(0b0011_00000100_00000100_00000100)
-mask_c: Final[Pack] = Pack(0b0011_00001100_00001100_00001100)
-won_s: Final[Pack] = Pack(0b0110_00100000_00100000_00100000)
-lost_s: Final[Pack] = Pack(0b0110_00010000_00010000_00010000)
-mask_s: Final[Pack] = Pack(0b0110_00110000_00110000_00110000)
-won_cn: Final[Pack] = Pack(0b0111_00001000_00001000_00001100)
-lost_cn: Final[Pack] = Pack(0b0111_00000100_00000100_00001100)
-mask_cn: Final[Pack] = Pack(0b0111_00001100_00001100_00001100)
-won_cm: Final[Pack] = Pack(0b0011_00001000_00001100_00001000)
-lost_cm: Final[Pack] = Pack(0b0011_00000100_00001100_00000100)
-mask_cm: Final[Pack] = Pack(0b0011_00001100_00001100_00001100)
-won_sn: Final[Pack] = Pack(0b1110_00100000_00100000_00110000)
-lost_sn: Final[Pack] = Pack(0b1110_00010000_00010000_00110000)
-mask_sn: Final[Pack] = Pack(0b1110_00110000_00110000_00110000)
-won_sm: Final[Pack] = Pack(0b0110_00100000_00110000_00100000)
-lost_sm: Final[Pack] = Pack(0b0110_00010000_00110000_00010000)
-mask_sm: Final[Pack] = Pack(0b0110_00110000_00110000_00110000)
+class Boxes:
+    def __getitem__(self, i: int):
+        i %= 16
+        if i < 0:
+            i += 16
+        return (self.data >> (i * 2)) & box
+    def __setitem__(self, i: int, value: int):
+        i %= 16
+        if i < 0:
+            i += 16
+        self.data &= ~(box << (i * 2))
+        self.data |= (value & box) << (i * 2)
+    @property
+    def values(self):
+        return self.data
+    def __init__(self, values: int):
+        self.data = values
+class Tuple:
+    def __init__(self, code: int):
+        self.data = code & 0xF3F3F3F
+        b_won = Boxes(code)
+        b_lost = Boxes(code)
+        b_mask = Boxes(code)
+        for i in range(0, 11):
+            if b_won[i] == 0b01:
+                b_won[i] = 0b00
+            if b_lost[i] == 0b01:
+                b_lost[i] = 0b00
+            elif b_lost[i] == 0b10:
+                b_lost[i] = 0b01
+            if b_mask[i] == 0b01:
+                b_mask[i] = 0b00
+            else:
+                b_mask[i] = 0b11
+        self.won = Pack((b_won.values & 0x3F3F3F) | (code & 0xF000000))
+        self.lost = Pack((b_lost.values & 0x3F3F3F) | (code & 0xF000000))
+        self.mask = Pack((b_mask.values & 0x3F3F3F) | (code & 0xF000000))
+    def __str__(self):
+        b_data = Boxes(self.data)
+        rst = "Tuple [ "
+        for i in range(10, -1, -1):
+            if i == 3 or i == 7:
+                rst += ", "
+            elif b_data[i] == 0b00:
+                rst += "_"
+            elif b_data[i] == 0b01:
+                rst += "~"
+            elif b_data[i] == 0b10:
+                rst += "$"
+            elif b_data[i] == 0b11:
+                rst += "+"
+        rst += " ] ( 0b"
+        rst += '{:04b}'.format(self.data >> 24)
+        rst += " )"
+        return rst
+zero_survive: Final[list[Tuple]] = [
+    Tuple(0b0011_00011001_00011001_00011001),
+    Tuple(0b0110_00100101_00100101_00100101),
+]
+single_survive: Final[list[Tuple]] = [
+    Tuple(0b0011_00011001_00011101_00011001),
+    Tuple(0b0111_00011001_00011001_00011101),
+    Tuple(0b0110_00100101_00110101_00100101),
+    Tuple(0b1110_00100101_00100101_00110101),
+]
+double_survive: Final[list[Tuple]] = [
+    Tuple(0b1110_00010111_00011010_00000100),
+    Tuple(0b1110_00010111_00011000_00000110),
+    Tuple(0b1110_00010111_00010010_00100100),
+    Tuple(0b1110_00010111_00010000_00100110),
+    Tuple(0b0110_00001011_00010110_00010100),
+    Tuple(0b0110_00100011_00010110_00010100),
+    Tuple(0b0110_00001011_00010100_00010110),
+    Tuple(0b0110_00100011_00010100_00010110),
+]
 cases: Final[list[Pack]] = [
     Pack(0b0000_00110011_00001100_00110011),
     Pack(0b0111_00001000_00001100_00000000),
-    Pack(0b0110_00001100_00110111_00111011),
-    Pack(0b0110_00011111_00111000_00110000),
-    Pack(0b0110_00011100_00111111_00001110),
-    Pack(0b1110_00011011_00110011_00111111),
-    Pack(0b1110_00011110_00001111_00001100),
-    Pack(0b1110_00111101_00100011_00111111),
-    Pack(0b0010_00100011_00000100_00110010),
-    Pack(0b0110_00001000_00100111_00001111),
-    Pack(0b0110_00011100_00111011_00001110),
-    Pack(0b1110_00110010_00100100_00111100),
-    Pack(0b1110_00000010_00100101_00000011),
-    Pack(0b1110_00001101_00110110_00101111),
-    Pack(0b1110_00011110_00101111_00011100),
 ]
+mask_a: Final[Pack] = Pack(0b1111_00111111_00111111_00111111)
 class ChessButton(QPushButton):
     def __init__(self, window: QMainWindow):
         super().__init__(window)
@@ -630,38 +674,21 @@ class MainWindow(QMainWindow):
                 return True
         return False
     def check_response(self):
-        p_mask_a = mask_a.boards
-        for i in range(0, len(cases)):
-            if self.process_response(cases[i].boards, p_mask_a):
+        for p in cases:
+            if self.process_response(p.boards, mask_a.boards):
                 return
-        p_won_cn = won_cn.boards
-        p_lost_cn = lost_cn.boards
-        p_mask_cn = mask_cn.boards
-        p_won_cm = won_cm.boards
-        p_lost_cm = lost_cm.boards
-        p_mask_cm = mask_cm.boards
-        p_won_sn = won_sn.boards
-        p_lost_sn = lost_sn.boards
-        p_mask_sn = mask_sn.boards
-        p_won_sm = won_sm.boards
-        p_lost_sm = lost_sm.boards
-        p_mask_sm = mask_sm.boards
-        if self.process_response(p_lost_cn, p_mask_cn):
-            return
-        if self.process_response(p_lost_cm, p_mask_cm):
-            return
-        if self.process_response(p_lost_sn, p_mask_sn):
-            return
-        if self.process_response(p_lost_sm, p_mask_sm):
-            return
-        if self.process_response(p_won_cn, p_mask_cn):
-            return
-        if self.process_response(p_won_cm, p_mask_cm):
-            return
-        if self.process_response(p_won_sn, p_mask_sn):
-            return
-        if self.process_response(p_won_sm, p_mask_sm):
-            return
+        for t in single_survive:
+            if self.process_response(t.lost.boards, t.mask.boards):
+                return
+        for t in single_survive:
+            if self.process_response(t.won.boards, t.mask.boards):
+                return
+        for t in double_survive:
+            if self.process_response(t.lost.boards, t.mask.boards):
+                return
+        for t in double_survive:
+            if self.process_response(t.won.boards, t.mask.boards):
+                return
         self.choose_chess(self.bo.locate_chess(Chess.Empty))
     def process_result(self, case: list[Board], mask: list[Board], result: Result):
         for i in range(0, len(case)):
@@ -672,20 +699,12 @@ class MainWindow(QMainWindow):
     def check_result(self):
         if self.re != Result.Empty:
             return
-        p_won_c = won_c.boards
-        p_lost_c = lost_c.boards
-        p_mask_c = mask_c.boards
-        p_won_s = won_s.boards
-        p_lost_s = lost_s.boards
-        p_mask_s = mask_s.boards
-        if self.process_result(p_won_c, p_mask_c, Result.Won):
-            return
-        if self.process_result(p_won_s, p_mask_s, Result.Won):
-            return
-        if self.process_result(p_lost_c, p_mask_c, Result.Lost):
-            return
-        if self.process_result(p_lost_s, p_mask_s, Result.Lost):
-            return
+        for t in zero_survive:
+            if self.process_result(t.lost.boards, t.mask.boards, Result.Lost):
+                return
+        for t in zero_survive:
+            if self.process_result(t.won.boards, t.mask.boards, Result.Won):
+                return
         if self.bo.round == 9:
             self.re = Result.Tied
     def new_game(self, mode: Mode):
