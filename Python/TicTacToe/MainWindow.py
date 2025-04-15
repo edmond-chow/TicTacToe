@@ -375,7 +375,7 @@ class Board:
         moves %= 8
         if moves < 0:
             moves += 8
-        nears = (self.data & 0xFFFF) << moves * 2
+        nears = (self.data & 0xFFFF) << (moves * 2)
         nears |= (nears & 0xFFFF0000) >> 16
         self.data = (self.data & 0xFFFF0000) | (nears & 0xFFFF)
     def reflect(self, orient: Orientation):
@@ -441,21 +441,18 @@ class Pack:
         rst += '{:04b}'.format(self.data >> 24)
         rst += " )"
         return rst
-cnt: Final[int] = 16
 class Boxes:
     def __getitem__(self, i: int):
-        i %= cnt
+        i %= 16
         if i < 0:
-            i += cnt
-        i *= 2
-        return (self.data >> i) & box
+            i += 16
+        return (self.data >> (i * 2)) & box
     def __setitem__(self, i: int, value: int):
-        i %= cnt
+        i %= 16
         if i < 0:
-            i += cnt
-        i *= 2
-        self.data &= ~(box << i)
-        self.data |= (value & box) << i
+            i += 16
+        self.data &= ~(box << (i * 2))
+        self.data |= (value & box) << (i * 2)
     @property
     def values(self):
         return self.data
@@ -484,7 +481,7 @@ class Tuple:
     def __str__(self):
         b_data = Boxes(self.data)
         rst = "Tuple [ "
-        for i in range(0, 11):
+        for i in range(10, -1, -1):
             if i == 3 or i == 7:
                 rst += ", "
             elif b_data[i] == 0b00:
@@ -496,7 +493,7 @@ class Tuple:
             elif b_data[i] == 0b11:
                 rst += "+"
         rst += " ] ( 0b"
-        rst += '{:04b}'.format(b_data.values >> 24)
+        rst += '{:04b}'.format(self.data >> 24)
         rst += " )"
         return rst
 zero_survive: Final[list[Tuple]] = [
