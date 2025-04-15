@@ -347,14 +347,14 @@ public class MainWindow extends JDialog {
             if (C4) { Sz *= 2; }
             if (C8) { Sz *= 2; }
             Board[] Rst = new Board[Sz];
-            for (int i = 0; i < Rst.length; ++i) {
+            for (int i = 0; i < Sz; ++i) {
                 Rst[i] = clone();
             }
             int Dx = 1;
             if (C1) {
                 int Dy = Dx;
                 Dx *= 2;
-                for (int i = Dy; i < Rst.length; ++i) {
+                for (int i = Dy; i < Sz; ++i) {
                     if (i % Dx == 0) { i += Dy; }
                     Rst[i].setParse1(!V1);
                 }
@@ -362,7 +362,7 @@ public class MainWindow extends JDialog {
             if (C2) {
                 int Dy = Dx;
                 Dx *= 2;
-                for (int i = Dy; i < Rst.length; ++i) {
+                for (int i = Dy; i < Sz; ++i) {
                     if (i % Dx == 0) { i += Dy; }
                     Rst[i].setParse2(!V2);
                 }
@@ -370,7 +370,7 @@ public class MainWindow extends JDialog {
             if (C4) {
                 int Dy = Dx;
                 Dx *= 2;
-                for (int i = Dy; i < Rst.length; ++i) {
+                for (int i = Dy; i < Sz; ++i) {
                     if (i % Dx == 0) { i += Dy; }
                     Rst[i].setParse4(!V4);
                 }
@@ -378,7 +378,7 @@ public class MainWindow extends JDialog {
             if (C8) {
                 int Dy = Dx;
                 Dx *= 2;
-                for (int i = Dy; i < Rst.length; ++i) {
+                for (int i = Dy; i < Sz; ++i) {
                     if (i % Dx == 0) { i += Dy; }
                     Rst[i].setParse8(!V8);
                 }
@@ -423,7 +423,7 @@ public class MainWindow extends JDialog {
         public void rotate(int moves) {
             moves %= 8;
             if (moves < 0) { moves += 8; }
-            int Nears = (Data & 0xFFFF) << moves * 2;
+            int Nears = (Data & 0xFFFF) << (moves * 2);
             Nears |= (Nears & 0xFFFF0000) >>> 16;
             Data = (Data & 0xFFFF0000) | (Nears & 0xFFFF);
         }
@@ -498,20 +498,17 @@ public class MainWindow extends JDialog {
     }
     private static class Boxes {
         private final int Box = 0b11;
-        private final int Cnt = 16;
         private int Data;
         public int get(int i) {
-            i %= Cnt;
-            if (i < 0) { i += Cnt; }
-            i *= 2;
-            return (Data >>> i) & Box;
+            i %= 16;
+            if (i < 0) { i += 16; }
+            return (Data >>> (i * 2)) & Box;
         }
         public void set(int i, int value) {
-            i %= Cnt;
-            if (i < 0) { i += Cnt; }
-            i *= 2;
-            Data &= ~(Box << i);
-            Data |= (value & Box) << i;
+            i %= 16;
+            if (i < 0) { i += 16; }
+            Data &= ~(Box << (i * 2));
+            Data |= (value & Box) << (i * 2);
         }
         public int getValues() {
             return Data;
@@ -544,9 +541,9 @@ public class MainWindow extends JDialog {
         }
         @Override
         public String toString() {
+            Boxes BData = new Boxes(Data);
             StringBuilder Rst = new StringBuilder(100);
             Rst.append("Tuple [ ");
-            Boxes BData = new Boxes(Data);
             for (int i = 0; i < 11; ++i)
             {
                 if (i == 3 || i == 7) { Rst.append(", "); }
