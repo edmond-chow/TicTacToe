@@ -444,7 +444,7 @@ namespace TicTacToe
                 Rst.Append(" } [ ");
                 for (int i = 1; i <= 9; ++i)
                 {
-                    if (this[i] == Chess.None) { Rst.Append("#"); }
+                    if (this[i] == Chess.None) { Rst.Append("_"); }
                     else if (this[i] == Chess.X) { Rst.Append("X"); }
                     else if (this[i] == Chess.O) { Rst.Append("O"); }
                     else if (this[i] == Chess.Preferred) { Rst.Append("+"); }
@@ -541,7 +541,7 @@ namespace TicTacToe
                 Rst.Append("Pack [ ");
                 for (int i = 1; i <= 9; ++i)
                 {
-                    if (Refer[i] == Chess.None) { Rst.Append("#"); }
+                    if (Refer[i] == Chess.None) { Rst.Append("_"); }
                     else if (Refer[i] == Chess.X) { Rst.Append("X"); }
                     else if (Refer[i] == Chess.O) { Rst.Append("O"); }
                     else if (Refer[i] == Chess.Preferred) { Rst.Append("+"); }
@@ -619,9 +619,9 @@ namespace TicTacToe
                 for (int i = 0; i < 11; ++i)
                 {
                     if (i == 3 || i == 7) { Rst.Append(", "); }
-                    else if (Data[i] == 0b00u) { Rst.Append("#"); }
-                    else if (Data[i] == 0b01u) { Rst.Append("%"); }
-                    else if (Data[i] == 0b10u) { Rst.Append("&"); }
+                    else if (Data[i] == 0b00u) { Rst.Append("_"); }
+                    else if (Data[i] == 0b01u) { Rst.Append("~"); }
+                    else if (Data[i] == 0b10u) { Rst.Append("$"); }
                     else if (Data[i] == 0b11u) { Rst.Append("+"); }
                 }
                 Rst.Append(" ] ( 0b");
