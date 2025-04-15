@@ -64,7 +64,7 @@ namespace TicTacToe
         }
         private enum Result : uint
         {
-            None = 0,
+            Empty = 0,
             Won = 1,
             Lost = 2,
             Tied = 3,
@@ -433,29 +433,29 @@ namespace TicTacToe
             public override string ToString()
             {
                 StringBuilder Rst = new StringBuilder(100);
-                Rst.Append("Board < ");
+                Rst.Append("Board < Mode.");
                 Rst.Append(Mode.ToString());
-                Rst.Append(", ");
+                Rst.Append(", Turn.");
                 Rst.Append(Turn.ToString());
-                Rst.Append(", ");
+                Rst.Append(", Result.");
                 Rst.Append(Result.ToString());
-                Rst.Append(" > { ");
+                Rst.Append(" > { 0x");
                 Rst.Append(Convert.ToString(Round, 16).ToUpper());
                 Rst.Append(" } [ ");
                 for (int i = 1; i <= 9; ++i)
                 {
-                    if (this[i] == Chess.None) { Rst.Append("?"); }
+                    if (this[i] == Chess.None) { Rst.Append("#"); }
                     else if (this[i] == Chess.X) { Rst.Append("X"); }
                     else if (this[i] == Chess.O) { Rst.Append("O"); }
                     else if (this[i] == Chess.Preferred) { Rst.Append("+"); }
                     if (i == 3 || i == 6) { Rst.Append(", "); }
                 }
-                Rst.Append(" ] ( ");
+                Rst.Append(" ] ( 0b");
                 Rst.Append(Convert.ToString(State, 2).PadLeft(4, '0'));
                 Rst.Append(", ");
                 Rst.Append(Parse8 ? "↓" : "↑");
                 Rst.Append((Moves * 45).ToString());
-                Rst.Append("°, ");
+                Rst.Append("°, Orientation.");
                 Rst.Append(Orient.ToString());
                 Rst.Append(" )");
                 return Rst.ToString();
@@ -541,78 +541,129 @@ namespace TicTacToe
                 Rst.Append("Pack [ ");
                 for (int i = 1; i <= 9; ++i)
                 {
-                    if (Refer[i] == Chess.None) { Rst.Append("?"); }
+                    if (Refer[i] == Chess.None) { Rst.Append("#"); }
                     else if (Refer[i] == Chess.X) { Rst.Append("X"); }
                     else if (Refer[i] == Chess.O) { Rst.Append("O"); }
                     else if (Refer[i] == Chess.Preferred) { Rst.Append("+"); }
                     if (i == 3 || i == 6) { Rst.Append(", "); }
                 }
-                Rst.Append(" ] ( ");
+                Rst.Append(" ] ( 0b");
                 Rst.Append(Convert.ToString(Data >> 24, 2).PadLeft(4, '0'));
+                Rst.Append(" )");
+                return Rst.ToString();
+            }
+        }
+        private struct Boxes
+        {
+            private const uint Box = 0b11u;
+            private const int Cnt = 16;
+            private uint Data;
+            public uint this[int i]
+            {
+                get
+                {
+                    i %= Cnt;
+                    if (i < 0) { i += Cnt; }
+                    i *= 2;
+                    return (Data >> i) & Box;
+                }
+                set
+                {
+                    i %= Cnt;
+                    if (i < 0) { i += Cnt; }
+                    i *= 2;
+                    Data &= ~(Box << i);
+                    Data |= (value & Box) << i;
+                }
+            }
+            public uint Values
+            {
+                get
+                {
+                    return Data;
+                }
+            }
+            public Boxes(uint Values)
+            {
+                Data = Values;
+            }
+        }
+        private readonly struct Tuple
+        {
+            public readonly Boxes Data;
+            public readonly Pack Won;
+            public readonly Pack Lost;
+            public readonly Pack Mask;
+            public Tuple(uint Code)
+            {
+                Data = new Boxes(Code & 0xF3F3F3Fu);
+                Boxes BWon = new Boxes(Code);
+                Boxes BLost = new Boxes(Code);
+                Boxes BMask = new Boxes(Code);
+                for (int i = 0; i < 11; ++i)
+                {
+                    if (BWon[i] == 0b01u) { BWon[i] = 0b00u; }
+                    if (BLost[i] == 0b01u) { BLost[i] = 0b00u; }
+                    else if (BLost[i] == 0b10u) { BLost[i] = 0b01u; }
+                    if (BMask[i] == 0b01u) { BMask[i] = 0b00u; }
+                    else { BMask[i] = 0b11u; }
+                }
+                Won = new Pack((BWon.Values & 0x3F3F3Fu) | (Code & 0xF000000u));
+                Lost = new Pack((BLost.Values & 0x3F3F3Fu) | (Code & 0xF000000u));
+                Mask = new Pack((BMask.Values & 0x3F3F3Fu) | (Code & 0xF000000u));
+            }
+            public override string ToString()
+            {
+                StringBuilder Rst = new StringBuilder(100);
+                Rst.Append("Tuple [ ");
+                for (int i = 0; i < 11; ++i)
+                {
+                    if (i == 3 || i == 7) { Rst.Append(", "); }
+                    else if (Data[i] == 0b00u) { Rst.Append("#"); }
+                    else if (Data[i] == 0b01u) { Rst.Append("%"); }
+                    else if (Data[i] == 0b10u) { Rst.Append("&"); }
+                    else if (Data[i] == 0b11u) { Rst.Append("+"); }
+                }
+                Rst.Append(" ] ( 0b");
+                Rst.Append(Convert.ToString(Data.Values >> 24, 2).PadLeft(4, '0'));
                 Rst.Append(" )");
                 return Rst.ToString();
             }
         }
         #endregion
         #region constants
-        private static readonly Pack MaskA;
-        private static readonly Pack WonC;
-        private static readonly Pack LostC;
-        private static readonly Pack MaskC;
-        private static readonly Pack WonS;
-        private static readonly Pack LostS;
-        private static readonly Pack MaskS;
-        private static readonly Pack WonCN;
-        private static readonly Pack LostCN;
-        private static readonly Pack MaskCN;
-        private static readonly Pack WonCM;
-        private static readonly Pack LostCM;
-        private static readonly Pack MaskCM;
-        private static readonly Pack WonSN;
-        private static readonly Pack LostSN;
-        private static readonly Pack MaskSN;
-        private static readonly Pack WonSM;
-        private static readonly Pack LostSM;
-        private static readonly Pack MaskSM;
+        private static readonly Tuple[] ZeroSurvive;
+        private static readonly Tuple[] SingleSurvive;
+        private static readonly Tuple[] DoubleSurvive;
         private static readonly Pack[] Cases;
+        private static readonly Pack MaskA;
         static MainWindow()
         {
-            MaskA = new Pack(0b1111_00111111_00111111_00111111u);
-            WonC = new Pack(0b0011_00001000_00001000_00001000u);
-            LostC = new Pack(0b0011_00000100_00000100_00000100u);
-            MaskC = new Pack(0b0011_00001100_00001100_00001100u);
-            WonS = new Pack(0b0110_00100000_00100000_00100000u);
-            LostS = new Pack(0b0110_00010000_00010000_00010000u);
-            MaskS = new Pack(0b0110_00110000_00110000_00110000u);
-            WonCN = new Pack(0b0111_00001000_00001000_00001100u);
-            LostCN = new Pack(0b0111_00000100_00000100_00001100u);
-            MaskCN = new Pack(0b0111_00001100_00001100_00001100u);
-            WonCM = new Pack(0b0011_00001000_00001100_00001000u);
-            LostCM = new Pack(0b0011_00000100_00001100_00000100u);
-            MaskCM = new Pack(0b0011_00001100_00001100_00001100u);
-            WonSN = new Pack(0b1110_00100000_00100000_00110000u);
-            LostSN = new Pack(0b1110_00010000_00010000_00110000u);
-            MaskSN = new Pack(0b1110_00110000_00110000_00110000u);
-            WonSM = new Pack(0b0110_00100000_00110000_00100000u);
-            LostSM = new Pack(0b0110_00010000_00110000_00010000u);
-            MaskSM = new Pack(0b0110_00110000_00110000_00110000u);
+            ZeroSurvive = new Tuple[] {
+                new Tuple(0b0011_00011001_00011001_00011001u),
+                new Tuple(0b0110_00100101_00100101_00100101u),
+            };
+            SingleSurvive = new Tuple[] {
+                new Tuple(0b0011_00011001_00011101_00011001u),
+                new Tuple(0b0111_00011001_00011001_00011101u),
+                new Tuple(0b0110_00100101_00110101_00100101u),
+                new Tuple(0b1110_00100101_00100101_00110101u),
+            };
+            DoubleSurvive = new Tuple[] {
+                new Tuple(0b1110_00010111_00011010_00000100u),
+                new Tuple(0b1110_00010111_00011000_00000110u),
+                new Tuple(0b1110_00010111_00010010_00100100u),
+                new Tuple(0b1110_00010111_00010000_00100110u),
+                new Tuple(0b0110_00001011_00010110_00010100u),
+                new Tuple(0b0110_00100011_00010110_00010100u),
+                new Tuple(0b0110_00001011_00010100_00010110u),
+                new Tuple(0b0110_00100011_00010100_00010110u),
+            };
             Cases = new Pack[] {
                 new Pack(0b0000_00110011_00001100_00110011u),
                 new Pack(0b0111_00001000_00001100_00000000u),
-                new Pack(0b0110_00001100_00110111_00111011u),
-                new Pack(0b0110_00011111_00111000_00110000u),
-                new Pack(0b0110_00011100_00111111_00001110u),
-                new Pack(0b1110_00011011_00110011_00111111u),
-                new Pack(0b1110_00011110_00001111_00001100u),
-                new Pack(0b1110_00111101_00100011_00111111u),
-                new Pack(0b0010_00100011_00000100_00110010u),
-                new Pack(0b0110_00001000_00100111_00001111u),
-                new Pack(0b0110_00011100_00111011_00001110u),
-                new Pack(0b1110_00110010_00100100_00111100u),
-                new Pack(0b1110_00000010_00100101_00000011u),
-                new Pack(0b1110_00001101_00110110_00101111u),
-                new Pack(0b1110_00011110_00101111_00011100u),
             };
+            MaskA = new Pack(0b1111_00111111_00111111_00111111u);
         }
         #endregion
         #region fields
@@ -680,7 +731,7 @@ namespace TicTacToe
             set
             {
                 if (Bo.Result == value) { return; }
-                if (value == Result.None)
+                if (value == Result.Empty)
                 {
                     Bo = new Board(Bo.Mode);
                 }
@@ -719,31 +770,26 @@ namespace TicTacToe
         }
         private void CheckResponse()
         {
-            Board[] PMaskA = MaskA.Boards;
-            foreach (Pack Case in Cases)
+            foreach (Pack P in Cases)
             {
-                if (ProcessResponse(Case.Boards, PMaskA)) { return; }
+                if (ProcessResponse(P.Boards, MaskA.Boards)) { return; }
             }
-            Board[] PWonCN = WonCN.Boards;
-            Board[] PLostCN = LostCN.Boards;
-            Board[] PMaskCN = MaskCN.Boards;
-            Board[] PWonCM = WonCM.Boards;
-            Board[] PLostCM = LostCM.Boards;
-            Board[] PMaskCM = MaskCM.Boards;
-            Board[] PWonSN = WonSN.Boards;
-            Board[] PLostSN = LostSN.Boards;
-            Board[] PMaskSN = MaskSN.Boards;
-            Board[] PWonSM = WonSM.Boards;
-            Board[] PLostSM = LostSM.Boards;
-            Board[] PMaskSM = MaskSM.Boards;
-            if (ProcessResponse(PLostCN, PMaskCN)) { return; }
-            if (ProcessResponse(PLostCM, PMaskCM)) { return; }
-            if (ProcessResponse(PLostSN, PMaskSN)) { return; }
-            if (ProcessResponse(PLostSM, PMaskSM)) { return; }
-            if (ProcessResponse(PWonCN, PMaskCN)) { return; }
-            if (ProcessResponse(PWonCM, PMaskCM)) { return; }
-            if (ProcessResponse(PWonSN, PMaskSN)) { return; }
-            if (ProcessResponse(PWonSM, PMaskSM)) { return; }
+            foreach (Tuple T in SingleSurvive)
+            {
+                if (ProcessResponse(T.Lost.Boards, T.Mask.Boards)) { return; }
+            }
+            foreach (Tuple T in SingleSurvive)
+            {
+                if (ProcessResponse(T.Won.Boards, T.Mask.Boards)) { return; }
+            }
+            foreach (Tuple T in DoubleSurvive)
+            {
+                if (ProcessResponse(T.Lost.Boards, T.Mask.Boards)) { return; }
+            }
+            foreach (Tuple T in DoubleSurvive)
+            {
+                if (ProcessResponse(T.Won.Boards, T.Mask.Boards)) { return; }
+            }
             ChooseChess(Bo.LocateChess(Chess.None));
         }
         private bool ProcessResult(Board[] Case, Board[] Mask, Result Result)
@@ -760,17 +806,15 @@ namespace TicTacToe
         }
         private void CheckResult()
         {
-            if (Re != Result.None) { return; }
-            Board[] PWonC = WonC.Boards;
-            Board[] PLostC = LostC.Boards;
-            Board[] PMaskC = MaskC.Boards;
-            Board[] PWonS = WonS.Boards;
-            Board[] PLostS = LostS.Boards;
-            Board[] PMaskS = MaskS.Boards;
-            if (ProcessResult(PWonC, PMaskC, Result.Won)) { return; }
-            if (ProcessResult(PWonS, PMaskS, Result.Won)) { return; }
-            if (ProcessResult(PLostC, PMaskC, Result.Lost)) { return; }
-            if (ProcessResult(PLostS, PMaskS, Result.Lost)) { return; }
+            if (Re != Result.Empty) { return; }
+            foreach (Tuple T in ZeroSurvive)
+            {
+                if (ProcessResult(T.Lost.Boards, T.Mask.Boards, Result.Lost)) { return; }
+            }
+            foreach (Tuple T in ZeroSurvive)
+            {
+                if (ProcessResult(T.Won.Boards, T.Mask.Boards, Result.Won)) { return; }
+            }
             if (Bo.Round == 9u) { Re = Result.Tied; }
         }
         private void NewGame(Mode Mode)
@@ -818,7 +862,7 @@ namespace TicTacToe
         {
             ButtonReset.Enabled = true;
             int i = Array.IndexOf(Co, Target);
-            if (Bo[i] == Chess.None && Re == Result.None)
+            if (Bo[i] == Chess.None && Re == Result.Empty)
             {
                 if (Tu == Turn.User)
                 {
@@ -827,7 +871,7 @@ namespace TicTacToe
                     Target.ForeColor = Color.Green;
                     Tu = Turn.Response;
                     CheckResult();
-                    if (!Bo.InDebugMode && Re == Result.None)
+                    if (!Bo.InDebugMode && Re == Result.Empty)
                     {
                         CheckResponse();
                         CheckResult();
