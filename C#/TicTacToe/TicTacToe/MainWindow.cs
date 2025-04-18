@@ -1,17 +1,17 @@
 ﻿/*
  *   TicTacToe
  *   
- *   A game you can be an Attacker or Defender, as a user you may put an O
- *   chess while the program might response from an X chess. Which of the
+ *   A game you can be an Attacker or Defender, as a User you may put an O
+ *   chess while as a Response the program might put an X chess. Which of the
  *   roles also gives you a chance to simulate within various cases in Debug
- *   mode. The code enumerates a course of options, the modes are encoded in
+ *   mode. The code enumerates a course of options, the Modes are encoded in
  *   the 2-bit field from a 32-bit type Board, and the one exceeding 2-bit is
  *   treated as a control code to NewGame. The Startup code intends to just
- *   reset the game without switching into other encoded mode. The Conjugate
- *   code switches in between Attacker or Defender while the Configure code
+ *   reset the game without switching into other encoded Mode. The Conjugate
+ *   Side switches in between Attacker or Defender while the Conjugate Form
  *   may on or off the Debug mode when you press the key D or Escape. The
- *   Conjugate code combining the Configure code reproduces 4 scene, which
- *   of those can further jump in Bonus scene or Clumsy scene, where you
+ *   Conjugate Side combining the Conjugate Form reproduces 4 scene, which
+ *   of those can further jump in Bonus Scene or Clumsy Scene, where you
  *   press the key W or L. Whenever you press the key Escape, you will
  *   ultimately get in the original scene you held.
  *   
@@ -50,8 +50,8 @@ namespace TicTacToe
             DebugAttacker = 2,
             DebugDefender = 3,
             StartupMode = 4,
-            ConjugateMode = 5,
-            ConfigureMode = 6,
+            SwitchSide = 5,
+            SwitchForm = 6,
             BonusScene = 7,
             ClumsyScene = 8,
         }
@@ -87,8 +87,8 @@ namespace TicTacToe
         {
             private const uint MaskFst3 = 0x3F00u;
             private const uint Box = 0b11u;
-            private const uint Conj = 0b1u;
-            private const uint Conf = 0b10u;
+            private const uint Side = 0b1u;
+            private const uint Form = 0b10u;
             private const uint P1 = 0b1u;
             private const uint P2 = 0b10u;
             private const uint P4 = 0b100u;
@@ -138,32 +138,32 @@ namespace TicTacToe
                     Data |= ((uint)value << Offset[IMode]) & Mask[IMode];
                 }
             }
-            public Mode ConjugateMode
+            public Mode ConjugateSide
             {
                 get
                 {
-                    return (Mode)(((uint)Mode & Conf) | (~(uint)Mode & Conj));
+                    return (Mode)(((uint)Mode & Form) | (~(uint)Mode & Side));
                 }
             }
-            public Mode ConfigureMode
+            public Mode ConjugateForm
             {
                 get
                 {
-                    return (Mode)(((uint)Mode & Conj) | (~(uint)Mode & Conf));
+                    return (Mode)(((uint)Mode & Side) | (~(uint)Mode & Form));
                 }
             }
             public bool OnDefenderSide
             {
                 get
                 {
-                    return ((uint)Mode & Conj) == Conj;
+                    return ((uint)Mode & Side) == Side;
                 }
             }
-            public bool InDebugMode
+            public bool InDebugForm
             {
                 get
                 {
-                    return ((uint)Mode & Conf) == Conf;
+                    return ((uint)Mode & Form) == Form;
                 }
             }
             public Turn Turn
@@ -349,7 +349,7 @@ namespace TicTacToe
             public Board(Mode Mode)
             {
                 Data = 0u;
-                if (((uint)Mode & Conj) == 0b0u) { Turn = Turn.User; }
+                if (((uint)Mode & Side) == 0b0u) { Turn = Turn.User; }
                 else { Turn = Turn.Response; }
                 this.Mode = Mode;
             }
@@ -672,7 +672,7 @@ namespace TicTacToe
         {
             get
             {
-                string Rst = Bo.InDebugMode ? "< Debug > " : "";
+                string Rst = Bo.InDebugForm ? "< Debug > " : "";
                 if (LstMo != Mode.StartupMode) { Rst = Bo.OnDefenderSide ? "< Clumsy > " : "< Bonus > "; }
                 Rst += "TicTacToe";
                 Rst += Bo.OnDefenderSide ? " Defender" : " Attacker";
@@ -819,8 +819,8 @@ namespace TicTacToe
         private void NewGame(Mode Mode)
         {
             if (Mode == Mode.StartupMode || Mo == Mode) { Tu = Turn.Unspecified; }
-            else if (Mode == Mode.ConjugateMode) { Mo = Bo.ConjugateMode; }
-            else if (Mode == Mode.ConfigureMode) { Mo = Bo.ConfigureMode; }
+            else if (Mode == Mode.SwitchSide) { Mo = Bo.ConjugateSide; }
+            else if (Mode == Mode.SwitchForm) { Mo = Bo.ConjugateForm; }
             else if (Mode == Mode.BonusScene)
             {
                 if (LstMo == Mode.StartupMode) { LstMo = Mo; }
@@ -855,7 +855,7 @@ namespace TicTacToe
                 PutChess(Button4);
                 PutChess(Button5);
             }
-            else if (Bo.OnDefenderSide && !Bo.InDebugMode) { CheckResponse(); }
+            else if (Bo.OnDefenderSide && !Bo.InDebugForm) { CheckResponse(); }
         }
         private void PutChess(Control Target)
         {
@@ -870,7 +870,7 @@ namespace TicTacToe
                     Target.ForeColor = Color.Green;
                     Tu = Turn.Response;
                     CheckResult();
-                    if (!Bo.InDebugMode && Re == Result.Empty)
+                    if (!Bo.InDebugForm && Re == Result.Empty)
                     {
                         CheckResponse();
                         CheckResult();
@@ -896,7 +896,7 @@ namespace TicTacToe
             }
             else
             {
-                NewGame(Mode.ConjugateMode);
+                NewGame(Mode.SwitchSide);
             }
         }
         private void ButtonResetClick(object sender, EventArgs e)
@@ -932,13 +932,13 @@ namespace TicTacToe
                 LstMo = Mode.StartupMode;
                 NewGame(Mo);
             }
-            else if (e.KeyCode == Keys.D && !Bo.InDebugMode)
+            else if (e.KeyCode == Keys.D && !Bo.InDebugForm)
             {
-                NewGame(Bo.ConfigureMode);
+                NewGame(Bo.ConjugateForm);
             }
-            else if (e.KeyCode == Keys.Escape && Bo.InDebugMode)
+            else if (e.KeyCode == Keys.Escape && Bo.InDebugForm)
             {
-                NewGame(Bo.ConfigureMode);
+                NewGame(Bo.ConjugateForm);
             }
         }
         private void ButtonChessClick(object sender, EventArgs e)
