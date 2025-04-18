@@ -2,7 +2,7 @@
  *   TicTacToe
  *   
  *   A game you can be an Attacker or Defender, as a user you may put an O
- *   chess while the program might response from a X chess. Which of the
+ *   chess while the program might response from an X chess. Which of the
  *   roles also gives you a chance to simulate within various cases in Debug
  *   mode. The code enumerates a course of options, the modes are encoded in
  *   the 2-bit field from a 32-bit type Board, and the one exceeding 2-bit is
@@ -659,6 +659,7 @@ namespace TicTacToe
             };
             Cases = new Pack[] {
                 new Pack(0b0000_00110011_00001100_00110011u),
+                new Pack(0b0000_00110011_00001000_00110011u),
                 new Pack(0b0111_00001000_00001100_00000000u),
             };
             MaskA = new Pack(0b1111_00111111_00111111_00111111u);
