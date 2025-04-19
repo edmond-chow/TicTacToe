@@ -2,15 +2,15 @@
 A game you can be an Attacker or Defender, as a User you may put an O chess
 while as a Response the program might put an X chess. Which of the roles also
 gives you a chance to simulate within various cases in Debug mode. The code
-enumerates a course of options, the Modes are encoded in the 2-bit field from a
-32-bit Board, and the one exceeding 2-bit is treated as a control code to
-NewGame. The Startup code intends to just reset the game without switching into
-other encoded Mode. The Conjugate Side switches in between Attacker or Defender
-while the Conjugate Form may on or off the Debug mode when you press the key D
-or Escape. The Conjugate Side combining the Conjugate Form reproduces 4 scene,
-which of those can further jump in Bonus Scene or Clumsy Scene, where you press
-the key W or L. Whenever you press the key Escape, you will ultimately get in
-the original scene you held.
+enumerates a course of options, the Modes are encoded in the 2-bit from a 32-bit
+Board, and the one exceeding 2-bit is treated as a control code to NewGame. The
+Startup code intends to just reset the game without switching into other encoded
+Mode. The Conjugate Side switches in between Attacker or Defender while the
+Conjugate Form may on or off the Debug mode when you press the key D or Escape.
+The Conjugate Side combining the Conjugate Form reproduces 4 scene, which of
+those can further jump in Bonus Scene or Clumsy Scene, where you press the key W
+or L. Whenever you press the key Escape, you will ultimately get in the original
+scene you held.
 
 # Enumerations
 Mode
@@ -71,9 +71,9 @@ The indices used to address the actual field from Offset and Mask
 * The Chesses on Board denoted from 1 through 9
 
 Special masks for validated in 32-bit with Boards
-* MFst3 = 0x3F00
-* MCircle = 0xFFFF
-* MMiddle = 0xFF00
+* First3 = 0x3F00
+* Circle = 0xFFFF
+* Center = 0xFF00
 
 The Chesses on Board may be Rotate to any Orientation or Reflect with an axis on
 an Orientation. The operations of Parse1 for 45 degrees, Parse2 for right angle,
@@ -118,8 +118,8 @@ Mask Pack Transformation
 * Preferred(0b11) -> Chess.Preferred(0b11)
 
 Special masks for validated in 32-bit with Sources and Codes
-* MaskPack = 0xF3F3F3F
-* MaskState = 0xF000000
-* MaskCase = 0x3F3F3F
+* Field = 0xF3F3F3F
+* Parse = 0xF000000
+* Match = 0x3F3F3F
 
 The Tuple might use the helper Boxes to transfer them one by one.
