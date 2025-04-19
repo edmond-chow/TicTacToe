@@ -1,19 +1,19 @@
 /*
  *   TicTacToe
  *
- *   A game you can be an Attacker or Defender, as a user you may put an O
- *   chess while the program might response from a X chess. Which of the
+ *   A game you can be an Attacker or Defender, as a User you may put an O
+ *   chess while as a Response the program might put an X chess. Which of the
  *   roles also gives you a chance to simulate within various cases in Debug
- *   mode. The code enumerates a course of options, the modes are encoded in
- *   the 2-bit field from a 32-bit type Board, and the one exceeding 2-bit is
- *   treated as a control code to NewGame. The Startup code intends to just
- *   reset the game without switching into other encoded mode. The Conjugate
- *   code switches in between Attacker or Defender while the Configure code
- *   may on or off the Debug mode when you press the key D or Escape. The
- *   Conjugate code combining the Configure code reproduces 4 scene, which
- *   of those can further jump in Bonus scene or Clumsy scene, where you
- *   press the key W or L. Whenever you press the key Escape, you will
- *   ultimately get in the original scene you held.
+ *   mode. The code enumerates a course of options, the Modes are encoded in
+ *   the 2-bit from a 32-bit Board, and the one exceeding 2-bit is treated as
+ *   a control code to NewGame. The Startup code intends to just reset the
+ *   game without switching into other encoded Mode. The Conjugate Side
+ *   switches in between Attacker or Defender while the Conjugate Form may on
+ *   or off the Debug mode when you press the key D or Escape. The Conjugate
+ *   Side combining the Conjugate Form reproduces 4 scene, which of those can
+ *   further jump in Bonus Scene or Clumsy Scene, where you press the key W
+ *   or L. Whenever you press the key Escape, you will ultimately get in the
+ *   original scene you held.
  *
  *   Copyright (C) 2025  Edmond Chow
  *
@@ -39,14 +39,17 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 public class MainWindow extends JDialog {
+    private static final int Field = 0xF3F3F3F;
+    private static final int Parse = 0xF000000;
+    private static final int Match = 0x3F3F3F;
     private enum Mode {
         Attacker(0),
         Defender(1),
         DebugAttacker(2),
         DebugDefender(3),
         StartupMode(4),
-        ConjugateMode(5),
-        ConfigureMode(6),
+        SwitchSide(5),
+        SwitchForm(6),
         BonusScene(7),
         ClumsyScene(8);
         private final int value;
@@ -150,10 +153,12 @@ public class MainWindow extends JDialog {
         }
     }
     private static class Board {
-        private static final int MaskFst3 = 0x3F00;
+        private static final int First3 = 0x3F00;
+        private static final int Circle = 0xFFFF;
+        private static final int Center = 0xFF00;
         private static final int Box = 0b11;
-        private static final int Conj = 0b1;
-        private static final int Conf = 0b10;
+        private static final int Side = 0b1;
+        private static final int Form = 0b10;
         private static final int P1 = 0b1;
         private static final int P2 = 0b10;
         private static final int P4 = 0b100;
@@ -191,17 +196,17 @@ public class MainWindow extends JDialog {
             Data &= ~Mask[IMode];
             Data |= (value.toInt() << Offset[IMode]) & Mask[IMode];
         }
-        public Mode getConjugateMode() {
-            return Mode.from((getMode().toInt() & Conf) | (~getMode().toInt() & Conj));
+        public Mode getConjugateSide() {
+            return Mode.from((getMode().toInt() & Form) | (~getMode().toInt() & Side));
         }
-        public Mode getConfigureMode() {
-            return Mode.from((getMode().toInt() & Conj) | (~getMode().toInt() & Conf));
+        public Mode getConjugateForm() {
+            return Mode.from((getMode().toInt() & Side) | (~getMode().toInt() & Form));
         }
         public boolean onDefenderSide() {
-            return (getMode().toInt() & Conj) == Conj;
+            return (getMode().toInt() & Side) == Side;
         }
-        public boolean inDebugMode() {
-            return (getMode().toInt() & Conf) == Conf;
+        public boolean inDebugForm() {
+            return (getMode().toInt() & Form) == Form;
         }
         public Turn getTurn() {
             return Turn.from((Data & Mask[ITurn]) >>> Offset[ITurn]);
@@ -290,7 +295,7 @@ public class MainWindow extends JDialog {
             else { setState(getState() & ~P8); }
         }
         public int getCase() {
-            int Rst = (Data & MaskFst3) >>> 6;
+            int Rst = (Data & First3) >>> 6;
             for (int i = 4; i <= 9; ++i) {
                 Rst <<= i == 7 ? 4 : 2;
                 Rst |= (Data & Mask[i]) >>> Offset[i];
@@ -298,9 +303,9 @@ public class MainWindow extends JDialog {
             return Rst;
         }
         public void setCase(int value) {
-            Data &= ~MaskFst3;
-            Data |= (value >>> 8) & MaskFst3;
-            int Rest = value & 0xFFFF;
+            Data &= ~First3;
+            Data |= (value >>> 8) & First3;
+            int Rest = value;
             for (int i = 9; i >= 4; --i) {
                 Data &= ~Mask[i];
                 Data |= (Rest & Box) << Offset[i];
@@ -316,7 +321,7 @@ public class MainWindow extends JDialog {
         }
         public Board(Mode mode) {
             Data = 0;
-            if ((mode.toInt() & Conj) == 0b0) { setTurn(Turn.User); }
+            if ((mode.toInt() & Side) == 0b0) { setTurn(Turn.User); }
             else { setTurn(Turn.Response); }
             setMode(mode);
         }
@@ -423,18 +428,20 @@ public class MainWindow extends JDialog {
         public void rotate(int moves) {
             moves %= 8;
             if (moves < 0) { moves += 8; }
-            int Nears = (Data & 0xFFFF) << (moves * 2);
-            Nears |= (Nears & 0xFFFF0000) >>> 16;
-            Data = (Data & 0xFFFF0000) | (Nears & 0xFFFF);
+            int Nears = Data & Circle;
+            Nears <<= moves * 2;
+            Nears |= Nears >>> 16;
+            Data &= ~Circle;
+            Data |= Nears & Circle;
         }
         public void reflect(Orientation Orient) {
             if (Orient == Orientation.Horizontal) {
                 int Lines = getCase();
-                int First = (Lines & 0xFF0000) >>> 16;
-                int Last = (Lines & 0xFF) << 16;
-                Lines &= 0xFF00;
-                Lines |= First;
-                Lines |= Last;
+                int Fst3 = Lines >>> 16;
+                int Lst3 = Lines << 16;
+                Lines &= Center;
+                Lines |= Fst3;
+                Lines |= Lst3;
                 setCase(Lines);
             } else if (Orient == Orientation.Upward) {
                 rotate(-1);
@@ -474,7 +481,7 @@ public class MainWindow extends JDialog {
             return Data;
         }
         public Pack(int Source) {
-            Data = Source & 0xF3F3F3F;
+            Data = Source & Field;
             Refer = new Board(Data);
             Parses = Refer.parseState(Data >>> 24);
         }
@@ -523,7 +530,7 @@ public class MainWindow extends JDialog {
         public final Pack Lost;
         public final Pack Mask;
         public Tuple(int Code) {
-            Data = Code & 0xF3F3F3F;
+            Data = Code & Field;
             Boxes BWon = new Boxes(Code);
             Boxes BLost = new Boxes(Code);
             Boxes BMask = new Boxes(Code);
@@ -535,9 +542,9 @@ public class MainWindow extends JDialog {
                 if (BMask.get(i) == 0b01) { BMask.set(i, 0b00); }
                 else { BMask.set(i, 0b11); }
             }
-            Won = new Pack((BWon.getValues() & 0x3F3F3F) | (Code & 0xF000000));
-            Lost = new Pack((BLost.getValues() & 0x3F3F3F) | (Code & 0xF000000));
-            Mask = new Pack((BMask.getValues() & 0x3F3F3F) | (Code & 0xF000000));
+            Won = new Pack((BWon.getValues() & Match) | (Code & Parse));
+            Lost = new Pack((BLost.getValues() & Match) | (Code & Parse));
+            Mask = new Pack((BMask.getValues() & Match) | (Code & Parse));
         }
         @Override
         public String toString() {
@@ -580,13 +587,14 @@ public class MainWindow extends JDialog {
     };
     private static final Pack[] Cases = new Pack[] {
         new Pack(0b0000_00110011_00001100_00110011),
+        new Pack(0b0000_00110011_00001000_00110011),
         new Pack(0b0111_00001000_00001100_00000000),
     };
     private static final Pack MaskA = new Pack(0b1111_00111111_00111111_00111111);
     private final Container[] Co;
     private Mode LstMo;
     private String getShownText() {
-        String Rst = Bo.inDebugMode() ? "< Debug > " : "";
+        String Rst = Bo.inDebugForm() ? "< Debug > " : "";
         if (LstMo != Mode.StartupMode) { Rst = Bo.onDefenderSide() ? "< Clumsy > " : "< Bonus > "; }
         Rst += "TicTacToe";
         Rst += Bo.onDefenderSide() ? " Defender" : " Attacker";
@@ -856,8 +864,8 @@ public class MainWindow extends JDialog {
     }
     private void newGame(Mode mode) {
         if (mode == Mode.StartupMode || getMo() == mode) { setTu(Turn.Unspecified); }
-        else if (mode == Mode.ConjugateMode) { setMo(Bo.getConjugateMode()); }
-        else if (mode == Mode.ConfigureMode) { setMo(Bo.getConfigureMode()); }
+        else if (mode == Mode.SwitchSide) { setMo(Bo.getConjugateSide()); }
+        else if (mode == Mode.SwitchForm) { setMo(Bo.getConjugateForm()); }
         else if (mode == Mode.BonusScene) {
             if (LstMo == Mode.StartupMode) { LstMo = getMo(); }
             if (getMo() == Mode.DebugAttacker) { setTu(Turn.Unspecified); }
@@ -884,7 +892,7 @@ public class MainWindow extends JDialog {
             putChess(Button7);
             putChess(Button4);
             putChess(Button5);
-        } else if (Bo.onDefenderSide() && !Bo.inDebugMode()) { checkResponse(); }
+        } else if (Bo.onDefenderSide() && !Bo.inDebugForm()) { checkResponse(); }
     }
     private void putChess(Container target) {
         ButtonReset.setEnabled(true);
@@ -896,7 +904,7 @@ public class MainWindow extends JDialog {
                 target.setForeground(Green);
                 setTu(Turn.Response);
                 checkResult();
-                if (!Bo.inDebugMode() && getRe() == Result.Empty)
+                if (!Bo.inDebugForm() && getRe() == Result.Empty)
                 {
                     checkResponse();
                     checkResult();
@@ -914,7 +922,7 @@ public class MainWindow extends JDialog {
         if (LstMo != Mode.StartupMode) {
             newGame(Bo.onDefenderSide() ? Mode.BonusScene : Mode.ClumsyScene);
         } else {
-            newGame(Mode.ConjugateMode);
+            newGame(Mode.SwitchSide);
         }
     }
     private void buttonResetClick(Object sender, ActionEvent e) {
@@ -938,10 +946,10 @@ public class MainWindow extends JDialog {
             Mode Mo = LstMo;
             LstMo = Mode.StartupMode;
             newGame(Mo);
-        } else if (e.getKeyCode() == KeyEvent.VK_D && !Bo.inDebugMode()) {
-            newGame(Bo.getConfigureMode());
-        } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE && Bo.inDebugMode()) {
-            newGame(Bo.getConfigureMode());
+        } else if (e.getKeyCode() == KeyEvent.VK_D && !Bo.inDebugForm()) {
+            newGame(Bo.getConjugateForm());
+        } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE && Bo.inDebugForm()) {
+            newGame(Bo.getConjugateForm());
         }
     }
     private void buttonChessClick(Object sender, ActionEvent e) {
