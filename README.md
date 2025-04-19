@@ -70,7 +70,7 @@ The indices used to address the actual field from Offset and Mask
 * IState = 13
 * The Chesses on Board denoted from 1 through 9
 
-Special masks for validated in 32-bit with Boards
+Special masks for validation in 32-bit with Boards
 * First3 = 0x3F00
 * Circle = 0xFFFF
 * Center = 0xFF00
@@ -117,7 +117,7 @@ Mask Pack Transformation
 * Preserve(0b10) -> Chess.Preferred(0b11)
 * Preferred(0b11) -> Chess.Preferred(0b11)
 
-Special masks for validated in 32-bit with Sources and Codes
+Special masks for validation in 32-bit with Sources and Codes
 * Field = 0xF3F3F3F
 * Parse = 0xF000000
 * Match = 0x3F3F3F
