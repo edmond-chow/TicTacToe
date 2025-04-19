@@ -1,19 +1,19 @@
 """
  *   TicTacToe
  *
- *   A game you can be an Attacker or Defender, as a user you may put an O
- *   chess while the program might response from a X chess. Which of the
+ *   A game you can be an Attacker or Defender, as a User you may put an O
+ *   chess while as a Response the program might put an X chess. Which of the
  *   roles also gives you a chance to simulate within various cases in Debug
- *   mode. The code enumerates a course of options, the modes are encoded in
- *   the 2-bit field from a 32-bit type Board, and the one exceeding 2-bit is
- *   treated as a control code to NewGame. The Startup code intends to just
- *   reset the game without switching into other encoded mode. The Conjugate
- *   code switches in between Attacker or Defender while the Configure code
- *   may on or off the Debug mode when you press the key D or Escape. The
- *   Conjugate code combining the Configure code reproduces 4 scene, which
- *   of those can further jump in Bonus scene or Clumsy scene, where you
- *   press the key W or L. Whenever you press the key Escape, you will
- *   ultimately get in the original scene you held.
+ *   mode. The code enumerates a course of options, the Modes are encoded in
+ *   the 2-bit from a 32-bit Board, and the one exceeding 2-bit is treated as
+ *   a control code to NewGame. The Startup code intends to just reset the
+ *   game without switching into other encoded Mode. The Conjugate Side
+ *   switches in between Attacker or Defender while the Conjugate Form may on
+ *   or off the Debug mode when you press the key D or Escape. The Conjugate
+ *   Side combining the Conjugate Form reproduces 4 scene, which of those can
+ *   further jump in Bonus Scene or Clumsy Scene, where you press the key W
+ *   or L. Whenever you press the key Escape, you will ultimately get in the
+ *   original scene you held.
  *
  *   Copyright (C) 2025  Edmond Chow
  *
@@ -39,14 +39,17 @@ from typing import Final
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QFont, QMouseEvent, QKeyEvent, QShowEvent
 from PySide6.QtWidgets import QMainWindow, QPushButton
+Field: Final[int] = 0xF3F3F3F
+Parse: Final[int] = 0xF000000
+Match: Final[int] = 0x3F3F3F
 class Mode(Enum):
     Attacker = 0
     Defender = 1
     DebugAttacker = 2
     DebugDefender = 3
     StartupMode = 4
-    ConjugateMode = 5
-    ConfigureMode = 6
+    SwitchSide = 5
+    SwitchForm = 6
     BonusScene = 7
     ClumsyScene = 8
     def __int__(self):
@@ -79,10 +82,12 @@ class Orientation(Enum):
     Downward = 3
     def __int__(self):
         return self.value
-mask_fst3: Final[int] = 0x3F00
+first3: Final[int] = 0x3F00
+circle: Final[int] = 0xFFFF
+center: Final[int] = 0xFF00
 box: Final[int] = 0b11
-conj: Final[int] = 0b1
-conf: Final[int] = 0b10
+side: Final[int] = 0b1
+form: Final[int] = 0b10
 p1: Final[int] = 0b1
 p2: Final[int] = 0b10
 p4: Final[int] = 0b100
@@ -123,17 +128,17 @@ class Board:
         self.data &= ~d_mask[i_mode]
         self.data |= (int(value) << d_offset[i_mode]) & d_mask[i_mode]
     @property
-    def conjugate_mode(self):
-        return Mode((int(self.mode) & conf) | (~int(self.mode) & conj))
+    def conjugate_side(self):
+        return Mode((int(self.mode) & form) | (~int(self.mode) & side))
     @property
-    def configure_mode(self):
-        return Mode((int(self.mode) & conj) | (~int(self.mode) & conf))
+    def conjugate_form(self):
+        return Mode((int(self.mode) & side) | (~int(self.mode) & form))
     @property
     def on_defender_side(self):
-        return (int(self.mode) & conj) == conj
+        return (int(self.mode) & side) == side
     @property
-    def in_debug_mode(self):
-        return (int(self.mode) & conf) == conf
+    def in_debug_form(self):
+        return (int(self.mode) & form) == form
     @property
     def turn(self):
         return Turn((self.data & d_mask[i_turn]) >> d_offset[i_turn])
@@ -233,7 +238,7 @@ class Board:
             self.state &= ~p8
     @property
     def case(self):
-        rst = (self.data & mask_fst3) >> 6
+        rst = (self.data & first3) >> 6
         for i in range(4, 10):
             if i == 7:
                 rst <<= 4
@@ -245,9 +250,9 @@ class Board:
     def case(self, value: int):
         if type(value) is not int:
             raise TypeError(value)
-        self.data &= ~mask_fst3
-        self.data |= (value >> 8) & mask_fst3
-        rest = value & 0xFFFF
+        self.data &= ~first3
+        self.data |= (value >> 8) & first3
+        rest = value
         for i in range(9, 3, -1):
             self.data &= ~d_mask[i]
             self.data |= (rest & box) << d_offset[i]
@@ -265,7 +270,7 @@ class Board:
     def __init__(self, mode):
         if type(mode) is Mode:
             self.data = 0
-            if (int(mode) & conj) == 0b0:
+            if (int(mode) & side) == 0b0:
                 self.turn = Turn.User
             else:
                 self.turn = Turn.Response
@@ -375,19 +380,21 @@ class Board:
         moves %= 8
         if moves < 0:
             moves += 8
-        nears = (self.data & 0xFFFF) << (moves * 2)
-        nears |= (nears & 0xFFFF0000) >> 16
-        self.data = (self.data & 0xFFFF0000) | (nears & 0xFFFF)
+        nears = self.data & circle
+        nears <<= moves * 2
+        nears |= nears >> 16
+        self.data &= ~circle
+        self.data |= nears & circle
     def reflect(self, orient: Orientation):
         if type(orient) is not Orientation:
             raise TypeError(orient)
         if orient == Orientation.Horizontal:
             lines = self.case
-            first = (lines & 0xFF0000) >> 16
-            last = (lines & 0xFF) << 16
-            lines &= 0xFF00
-            lines |= first
-            lines |= last
+            fst3 = lines >> 16
+            lst3 = lines << 16
+            lines &= center
+            lines |= fst3
+            lines |= lst3
             self.case = lines
         elif orient == Orientation.Upward:
             self.rotate(-1)
@@ -518,6 +525,7 @@ double_survive: Final[list[Tuple]] = [
 ]
 cases: Final[list[Pack]] = [
     Pack(0b0000_00110011_00001100_00110011),
+    Pack(0b0000_00110011_00001000_00110011),
     Pack(0b0111_00001000_00001100_00000000),
 ]
 mask_a: Final[Pack] = Pack(0b1111_00111111_00111111_00111111)
@@ -560,7 +568,7 @@ class MainWindow(QMainWindow):
     @property
     def title(self):
         rst = ""
-        if self.bo.in_debug_mode:
+        if self.bo.in_debug_form:
             rst = "< Debug > "
         if self.lst_mo != Mode.StartupMode:
             if self.bo.on_defender_side:
@@ -710,10 +718,10 @@ class MainWindow(QMainWindow):
     def new_game(self, mode: Mode):
         if mode == Mode.StartupMode or self.mo == Mode:
             self.tu = Turn.Unspecified
-        elif mode == Mode.ConjugateMode:
-            self.mo = self.bo.conjugate_mode
-        elif mode == Mode.ConfigureMode:
-            self.mo = self.bo.configure_mode
+        elif mode == Mode.SwitchSide:
+            self.mo = self.bo.conjugate_side
+        elif mode == Mode.SwitchForm:
+            self.mo = self.bo.conjugate_form
         elif mode == Mode.BonusScene:
             if self.lst_mo == Mode.StartupMode:
                 self.lst_mo = self.mo
@@ -744,7 +752,7 @@ class MainWindow(QMainWindow):
             self.put_chess(self.button7)
             self.put_chess(self.button4)
             self.put_chess(self.button5)
-        elif self.bo.on_defender_side and not self.bo.in_debug_mode:
+        elif self.bo.on_defender_side and not self.bo.in_debug_form:
             self.check_response()
     def put_chess(self, target: QPushButton):
         self.button_reset.setDisabled(False)
@@ -756,7 +764,7 @@ class MainWindow(QMainWindow):
                 target.setStyleSheet("color: green")
                 self.tu = Turn.Response
                 self.check_result()
-                if not self.bo.in_debug_mode and self.re == Result.Empty:
+                if not self.bo.in_debug_form and self.re == Result.Empty:
                     self.check_response()
                     self.check_result()
             elif self.tu == Turn.Response:
@@ -769,7 +777,7 @@ class MainWindow(QMainWindow):
         if self.lst_mo != Mode.StartupMode:
             self.new_game(self.bo.on_defender_side if Mode.BonusScene else Mode.ClumsyScene)
         else:
-            self.new_game(Mode.ConjugateMode)
+            self.new_game(Mode.SwitchSide)
     def button_reset_click(self, sender: QPushButton, e: QMouseEvent):
         if self.lst_mo != Mode.StartupMode:
             mo = self.lst_mo
@@ -788,9 +796,9 @@ class MainWindow(QMainWindow):
             mo = self.lst_mo
             self.lst_mo = Mode.StartupMode
             self.new_game(mo)
-        elif e.key() == Qt.Key.Key_D and not self.bo.in_debug_mode:
-            self.new_game(self.bo.configure_mode)
-        elif e.key() == Qt.Key.Key_Escape and self.bo.in_debug_mode:
-            self.new_game(self.bo.configure_mode)
+        elif e.key() == Qt.Key.Key_D and not self.bo.in_debug_form:
+            self.new_game(self.bo.conjugate_form)
+        elif e.key() == Qt.Key.Key_Escape and self.bo.in_debug_form:
+            self.new_game(self.bo.conjugate_form)
     def button_chess_click(self, sender: QPushButton, e: QMouseEvent):
         self.put_chess(sender)
