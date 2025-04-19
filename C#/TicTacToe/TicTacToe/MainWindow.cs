@@ -5,15 +5,15 @@
  *   chess while as a Response the program might put an X chess. Which of the
  *   roles also gives you a chance to simulate within various cases in Debug
  *   mode. The code enumerates a course of options, the Modes are encoded in
- *   the 2-bit field from a 32-bit type Board, and the one exceeding 2-bit is
- *   treated as a control code to NewGame. The Startup code intends to just
- *   reset the game without switching into other encoded Mode. The Conjugate
- *   Side switches in between Attacker or Defender while the Conjugate Form
- *   may on or off the Debug mode when you press the key D or Escape. The
- *   Conjugate Side combining the Conjugate Form reproduces 4 scene, which
- *   of those can further jump in Bonus Scene or Clumsy Scene, where you
- *   press the key W or L. Whenever you press the key Escape, you will
- *   ultimately get in the original scene you held.
+ *   the 2-bit from a 32-bit Board, and the one exceeding 2-bit is treated as
+ *   a control code to NewGame. The Startup code intends to just reset the
+ *   game without switching into other encoded Mode. The Conjugate Side
+ *   switches in between Attacker or Defender while the Conjugate Form may on
+ *   or off the Debug mode when you press the key D or Escape. The Conjugate
+ *   Side combining the Conjugate Form reproduces 4 scene, which of those can
+ *   further jump in Bonus Scene or Clumsy Scene, where you press the key W
+ *   or L. Whenever you press the key Escape, you will ultimately get in the
+ *   original scene you held.
  *   
  *   Copyright (C) 2025  Edmond Chow
  *   
@@ -42,6 +42,11 @@ namespace TicTacToe
 {
     public partial class MainWindow : Form
     {
+        #region constants
+        private const uint Field = 0xF3F3F3Fu;
+        private const uint Parse = 0xF000000u;
+        private const uint Match = 0x3F3F3Fu;
+        #endregion
         #region helper-classes
         private enum Mode : uint
         {
@@ -85,7 +90,9 @@ namespace TicTacToe
         }
         private struct Board
         {
-            private const uint MaskFst3 = 0x3F00u;
+            private const uint First3 = 0x3F00u;
+            private const uint Circle = 0xFFFFu;
+            private const uint Center = 0xFF00u;
             private const uint Box = 0b11u;
             private const uint Side = 0b1u;
             private const uint Form = 0b10u;
@@ -313,7 +320,7 @@ namespace TicTacToe
             {
                 get
                 {
-                    uint Rst = (Data & MaskFst3) >> 6;
+                    uint Rst = (Data & First3) >> 6;
                     for (int i = 4; i <= 9; ++i)
                     {
                         Rst <<= i == 7 ? 4 : 2;
@@ -323,9 +330,9 @@ namespace TicTacToe
                 }
                 set
                 {
-                    Data &= ~MaskFst3;
-                    Data |= (value >> 8) & MaskFst3;
-                    uint Rest = value & 0xFFFFu;
+                    Data &= ~First3;
+                    Data |= (value >> 8) & First3;
+                    uint Rest = value;
                     for (int i = 9; i >= 4; --i)
                     {
                         Data &= ~Mask[i];
@@ -464,20 +471,22 @@ namespace TicTacToe
             {
                 Moves %= 8;
                 if (Moves < 0) { Moves += 8; }
-                uint Nears = (Data & 0xFFFFu) << (Moves * 2);
-                Nears |= (Nears & 0xFFFF0000u) >> 16;
-                Data = (Data & 0xFFFF0000u) | (Nears & 0xFFFFu);
+                uint Nears = Data & Circle;
+                Nears <<= Moves * 2;
+                Nears |= Nears >> 16;
+                Data &= ~Circle;
+                Data |= Nears & Circle;
             }
             public void Reflect(Orientation Orient)
             {
                 if (Orient == Orientation.Horizontal)
                 {
                     uint Lines = Case;
-                    uint First = (Lines & 0xFF0000u) >> 16;
-                    uint Last = (Lines & 0xFFu) << 16;
-                    Lines &= 0xFF00u;
-                    Lines |= First;
-                    Lines |= Last;
+                    uint Fst3 = Lines >> 16;
+                    uint Lst3 = Lines << 16;
+                    Lines &= Center;
+                    Lines |= Fst3;
+                    Lines |= Lst3;
                     Case = Lines;
                 }
                 else if (Orient == Orientation.Upward)
@@ -531,7 +540,7 @@ namespace TicTacToe
             }
             public Pack(uint Source)
             {
-                Data = Source & 0xF3F3F3Fu;
+                Data = Source & Field;
                 Refer = new Board(Data);
                 Parses = Refer.ParseState(Data >> 24);
             }
@@ -593,7 +602,7 @@ namespace TicTacToe
             public readonly Pack Mask;
             public Tuple(uint Code)
             {
-                Data = Code & 0xF3F3F3Fu;
+                Data = Code & Field;
                 Boxes BWon = new Boxes(Code);
                 Boxes BLost = new Boxes(Code);
                 Boxes BMask = new Boxes(Code);
@@ -605,9 +614,9 @@ namespace TicTacToe
                     if (BMask[i] == 0b01u) { BMask[i] = 0b00u; }
                     else { BMask[i] = 0b11u; }
                 }
-                Won = new Pack((BWon.Values & 0x3F3F3Fu) | (Code & 0xF000000u));
-                Lost = new Pack((BLost.Values & 0x3F3F3Fu) | (Code & 0xF000000u));
-                Mask = new Pack((BMask.Values & 0x3F3F3Fu) | (Code & 0xF000000u));
+                Won = new Pack((BWon.Values & Match) | (Code & Parse));
+                Lost = new Pack((BLost.Values & Match) | (Code & Parse));
+                Mask = new Pack((BMask.Values & Match) | (Code & Parse));
             }
             public override string ToString()
             {
