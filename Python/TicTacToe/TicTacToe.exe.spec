@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['Main.py'],
+    ['Program.py'],
     pathex=[],
     binaries=[],
     datas=[('TicTacToe.ico', '.')],
