@@ -52,11 +52,11 @@ Orientation
 The 32-bit Board consists of Mode encoded in a 2-bit, Turn encoded in a 2-bit,
 Result encoded in a 2-bit, Round encoded in a 4-bit, State encoded in a 4-bit,
 and all 9 Chesses encoded in a 2-bit. The most significant byte used to pack the
-Mode, Turn, Result and Center Chess starting from a high offset bit. The most
-significant 2 byte resides the Round and State starting from a high offset bit.
-The least significant word holds the Circle Chesses so that Rotate is handy to
+Mode, Turn, Result, and Center Chess starting from high offset bit. The 2nd most
+significant byte resides the Round and State starting from high offset bit. The
+least significant word holds the Circle Chesses so that Rotate is handy to
 implement while left shifting every 2 bits and inserting its leftmost overflows
-means counter-clockwise a 45 degrees. We might access some field through Offset
+means counter-clockwise a 45-degree. We might access some field through Offset
 and Mask from the indices.
 
 An array listing all the offsets for the fields
@@ -70,34 +70,34 @@ The indices used to address the actual field from Offset and Mask
 * IState = 13
 * The Chesses on Board denoted from 1 through 9
 
-Special masks for validation in 32-bit with Boards
+Special Masks for Validation in 32-bit with Boards
 * First3 = 0x3F00
 * Circle = 0xFFFF
 * Center = 0xFF00
 
 The Chesses on Board may be Rotate to any Orientation or Reflect with an axis on
-an Orientation. The operations of Parse1 for 45 degrees, Parse2 for right angle,
-and Parse4 for flat Angle on or off can be exchanged in any order. The trick how
+an Orientation. The operations of Parse1 for 45-degree, Parse2 for right angle,
+and Parse4 for flat angle on or off can be exchanged in any order. The trick how
 the operations of Parse8 on or off also can work with that set of operations on
 the same means is the reflection axis to Reflect follows the displacement of the
 total angles from other Parses. Board.ParseState lists out all the combination
 you would like while Board.LocateChess locates where the prefer Chesses reside.
-The Case gets you accessing a 32-bit to modify all 9 Chesses with encoded datum.
+The Case gets you accessing a 32-bit to denote all 9 Chesses with encoded datum.
 
-The offsets to pack encoded datum showing a Case (Starting from a MSB)
+The offsets packing encoded datum showing a Case (Starting from high offset bit)
 * The Chesses 1 through 3 on Board reside the bits 16 through 21
 * The Chesses 4 through 6 on Board reside the bits 8 through 13
 * The Chesses 7 through 9 on Board reside the bits 0 through 5
 * The rest are reserved (shall be zeros)
 
-The Pack receive a 32-bit Source to create Boards, the least significant bits
-24 through 27 storing a State for listing various Cases through Board.ParseState
-while the least significant 3 bytes same as packing encoded datum showing a Case
-and the rest are reserved that shall be zeros.
+The Pack receive a 32-bit Source to create Boards, the 24th through 27th least
+significant bits storing a State for listing various Boards through
+Board.ParseState while the least significant 3 bytes same as packing encoded
+datum showing a Case and the rest are reserved that shall be zeros.
 
 The Tuple receive a 32-bit Code to create a course of Packs (Won, Lost and Mask)
 where the bits interpretation of Code same as Source. The original bits storing
-9 Chesses now are for control codes to generate the 3 Packs.
+9 Chesses now are for control codes to generate that 3 Packs.
 
 Won Pack Transformation
 * Empty(0b00) -> Chess.None(0b00)
@@ -117,7 +117,7 @@ Mask Pack Transformation
 * Preserve(0b10) -> Chess.Preferred(0b11)
 * Preferred(0b11) -> Chess.Preferred(0b11)
 
-Special masks for validation in 32-bit with Sources and Codes
+Special Masks for Validation in 32-bit with Sources and Codes
 * Field = 0xF3F3F3F
 * Parse = 0xF000000
 * Match = 0x3F3F3F
