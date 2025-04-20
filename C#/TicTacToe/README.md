@@ -97,7 +97,7 @@ datum showing a Case and the rest are reserved that shall be zeros.
 
 The Tuple receive a 32-bit Code to create a course of Packs (Won, Lost and Mask)
 where the bits interpretation of Code same as Source. The original bits storing
-9 Chesses now are for control codes to generate that 3 Packs.
+9 Chesses now are for control codes to generate those 3 Packs.
 
 Won Pack Transformation
 * Empty(0b00) -> Chess.None(0b00)
