@@ -874,9 +874,7 @@ public class MainWindow extends JDialog {
             if (LstMo == Mode.StartupMode) { LstMo = getMo(); }
             if (getMo() == Mode.DebugDefender) { setTu(Turn.Unspecified); }
             else { setMo(Mode.DebugDefender); }
-        } else {
-            setMo(mode);
-        }
+        } else { setMo(mode); }
         ButtonReset.setEnabled(false);
         for (int i = 1; i <= 9; ++i) {
             ((AbstractButton)Co[i]).setText("");

@@ -842,10 +842,7 @@ namespace TicTacToe
                 if (Mo == Mode.DebugDefender) { Tu = Turn.Unspecified; }
                 else { Mo = Mode.DebugDefender; }
             }
-            else
-            {
-                Mo = Mode;
-            }
+            else { Mo = Mode; }
             ButtonReset.Enabled = false;
             for (int i = 1; i <= 9; ++i)
             {
