@@ -39,9 +39,9 @@ from typing import Final
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QFont, QMouseEvent, QKeyEvent, QShowEvent
 from PySide6.QtWidgets import QMainWindow, QPushButton
-Field: Final[int] = 0xF3F3F3F
-Parse: Final[int] = 0xF000000
-Match: Final[int] = 0x3F3F3F
+field: Final[int] = 0xF3F3F3F
+parse: Final[int] = 0xF000000
+match: Final[int] = 0x3F3F3F
 class Mode(Enum):
     Attacker = 0
     Defender = 1
@@ -240,10 +240,7 @@ class Board:
     def case(self):
         rst = (self.data & first3) >> 6
         for i in range(4, 10):
-            if i == 7:
-                rst <<= 4
-            else:
-                rst <<= 2
+            rst <<= 4 if i == 7 else 2
             rst |= (self.data & d_mask[i]) >> d_offset[i]
         return rst
     @case.setter
@@ -256,10 +253,7 @@ class Board:
         for i in range(9, 3, -1):
             self.data &= ~d_mask[i]
             self.data |= (rest & box) << d_offset[i]
-            if i == 7:
-                rest >>= 4
-            else:
-                rest >>= 2
+            rest >>= 4 if i == 7 else 2
     @property
     def sanitizer(self):
         rst = copy(self)
@@ -365,10 +359,7 @@ class Board:
         rst += " ] ( 0b"
         rst += '{:04b}'.format(self.state)
         rst += ", "
-        if self.parse8:
-            rst += "↓"
-        else:
-            rst += "↑"
+        rst += "↓" if self.parse8 else "↑"
         rst += str(self.moves * 45)
         rst += "°, "
         rst += str(self.orient)
@@ -428,7 +419,7 @@ class Pack:
     def __init__(self, source: int):
         if type(source) is not int:
             raise TypeError(source)
-        self.data = source & 0xF3F3F3F
+        self.data = source & field
         self.refer = Board(self.data)
         self.parses = self.refer.parse_state(self.data >> 24)
     def __str__(self):
@@ -467,7 +458,7 @@ class Boxes:
         self.data = values
 class Tuple:
     def __init__(self, code: int):
-        self.data = code & 0xF3F3F3F
+        self.data = code & field
         b_won = Boxes(code)
         b_lost = Boxes(code)
         b_mask = Boxes(code)
@@ -482,9 +473,9 @@ class Tuple:
                 b_mask[i] = 0b00
             else:
                 b_mask[i] = 0b11
-        self.won = Pack((b_won.values & 0x3F3F3F) | (code & 0xF000000))
-        self.lost = Pack((b_lost.values & 0x3F3F3F) | (code & 0xF000000))
-        self.mask = Pack((b_mask.values & 0x3F3F3F) | (code & 0xF000000))
+        self.won = Pack((b_won.values & match) | (code & parse))
+        self.lost = Pack((b_lost.values & match) | (code & parse))
+        self.mask = Pack((b_mask.values & match) | (code & parse))
     def __str__(self):
         b_data = Boxes(self.data)
         rst = "Tuple [ "
@@ -567,19 +558,11 @@ class ResetButton(QPushButton):
 class MainWindow(QMainWindow):
     @property
     def title(self):
-        rst = ""
-        if self.bo.in_debug_form:
-            rst = "< Debug > "
+        rst = "< Debug > " if self.bo.in_debug_form else ""
         if self.lst_mo != Mode.StartupMode:
-            if self.bo.on_defender_side:
-                rst = "< Clumsy > "
-            else:
-                rst = "< Bonus > "
+            rst = "< Clumsy > " if self.bo.on_defender_side else "< Bonus > "
         rst += "TicTacToe"
-        if self.bo.on_defender_side:
-            rst += " Defender"
-        else:
-            rst += " Attacker"
+        rst += " Defender" if self.bo.on_defender_side else " Attacker"
         if self.bo.result == Result.Won:
             rst += " [ Win ]"
         elif self.bo.result == Result.Lost:
@@ -716,7 +699,7 @@ class MainWindow(QMainWindow):
         if self.bo.round == 9:
             self.re = Result.Tied
     def new_game(self, mode: Mode):
-        if mode == Mode.StartupMode or self.mo == Mode:
+        if mode == Mode.StartupMode or self.mo == mode:
             self.tu = Turn.Unspecified
         elif mode == Mode.SwitchSide:
             self.mo = self.bo.conjugate_side
@@ -775,7 +758,7 @@ class MainWindow(QMainWindow):
                 self.check_result()
     def button_switch_click(self, sender: QPushButton, e: QMouseEvent):
         if self.lst_mo != Mode.StartupMode:
-            self.new_game(self.bo.on_defender_side if Mode.BonusScene else Mode.ClumsyScene)
+            self.new_game(Mode.BonusScene if self.bo.on_defender_side else Mode.ClumsyScene)
         else:
             self.new_game(Mode.SwitchSide)
     def button_reset_click(self, sender: QPushButton, e: QMouseEvent):

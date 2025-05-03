@@ -1,2 +1,3 @@
 pyside6-rcc "./TicTacToe.qrc" -o "./TicTacToe.py"
-pyinstaller --onefile --windowed --add-data="TicTacToe.ico;." --name="TicTacToe.exe" --icon="./TicTacToe.ico" --version-file="version.txt" "./Program.py"
+pyinstaller --workpath="./py/build" --specpath="./py/spec" --distpath="./py/dist" --onefile --windowed --add-data="../../TicTacToe.ico;." --name="TicTacToe.exe" --icon="../../TicTacToe.ico" --version-file="../../version.txt" "./Program.py"
+nuitka --output-dir="./native" --windows-console-mode=disable --standalone --onefile --enable-plugin=pyside6 --output-filename="TicTacToe.exe" --windows-icon-from-ico="./TicTacToe.ico" --file-version=0.0.0.0 --product-version=0.0.0.0 --file-description="TicTacToe" --product-name="TicTacToe" --copyright="Edmond Chow" "./Program.py"
