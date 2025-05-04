@@ -641,13 +641,13 @@ public class MainWindow extends JDialog {
         Bo.setResult(value);
         setTitle(getShownText());
     }
-    private static final Color GhostWhite = new Color(0xF8F8FF);
-    private static final Color AliceBlue = new Color(0xF0F8FF);
-    private static final Color DodgerBlue = new Color(0x1E90FF);
-    private static final Color LightSeaGreen = new Color(0x20B2AA);
-    private static final Color LightSteelBlue = new Color(0xB0C4DE);
-    private static final Color Green = new Color(0x008000);
-    private static final Color Red = new Color(0xFF0000);
+    private static final Color WindowStatic = new Color(0xF0F0F0);
+    private static final Color ControlStatic = new Color(0xFDFDFD);
+    private static final Color ControlHover = new Color(0xE0EEF9);
+    private static final Color BorderStatic = new Color(0xD0D0D0);
+    private static final Color BorderHover = new Color(0x0078D4);
+    private static final Color ChessO = new Color(0x008000);
+    private static final Color ChessX = new Color(0xFF0000);
     private JButton Button1;
     private JButton Button2;
     private JButton Button3;
@@ -697,29 +697,40 @@ public class MainWindow extends JDialog {
         ButtonSwitch.setBounds(12, 270, 123, 35);
         ButtonReset.setBounds(141, 270, 123, 35);
         Panel.setPreferredSize(new Dimension(276, 317));
-        Button1.setBackground(AliceBlue);
-        Button2.setBackground(AliceBlue);
-        Button3.setBackground(AliceBlue);
-        Button4.setBackground(AliceBlue);
-        Button5.setBackground(AliceBlue);
-        Button6.setBackground(AliceBlue);
-        Button7.setBackground(AliceBlue);
-        Button8.setBackground(AliceBlue);
-        Button9.setBackground(AliceBlue);
-        ButtonSwitch.setBackground(AliceBlue);
-        ButtonReset.setBackground(AliceBlue);
-        Panel.setBackground(LightSteelBlue);
-        Button1.setBorder(new LineBorder(DodgerBlue));
-        Button2.setBorder(new LineBorder(DodgerBlue));
-        Button3.setBorder(new LineBorder(DodgerBlue));
-        Button4.setBorder(new LineBorder(DodgerBlue));
-        Button5.setBorder(new LineBorder(DodgerBlue));
-        Button6.setBorder(new LineBorder(DodgerBlue));
-        Button7.setBorder(new LineBorder(DodgerBlue));
-        Button8.setBorder(new LineBorder(DodgerBlue));
-        Button9.setBorder(new LineBorder(DodgerBlue));
-        ButtonSwitch.setBorder(new LineBorder(DodgerBlue));
-        ButtonReset.setBorder(new LineBorder(DodgerBlue));
+        Button1.setBackground(ControlStatic);
+        Button2.setBackground(ControlStatic);
+        Button3.setBackground(ControlStatic);
+        Button4.setBackground(ControlStatic);
+        Button5.setBackground(ControlStatic);
+        Button6.setBackground(ControlStatic);
+        Button7.setBackground(ControlStatic);
+        Button8.setBackground(ControlStatic);
+        Button9.setBackground(ControlStatic);
+        ButtonSwitch.setBackground(ControlStatic);
+        ButtonReset.setBackground(ControlStatic);
+        Panel.setBackground(WindowStatic);
+        Button1.setBorder(new LineBorder(BorderStatic));
+        Button2.setBorder(new LineBorder(BorderStatic));
+        Button3.setBorder(new LineBorder(BorderStatic));
+        Button4.setBorder(new LineBorder(BorderStatic));
+        Button5.setBorder(new LineBorder(BorderStatic));
+        Button6.setBorder(new LineBorder(BorderStatic));
+        Button7.setBorder(new LineBorder(BorderStatic));
+        Button8.setBorder(new LineBorder(BorderStatic));
+        Button9.setBorder(new LineBorder(BorderStatic));
+        ButtonSwitch.setBorder(new LineBorder(BorderStatic));
+        ButtonReset.setBorder(new LineBorder(BorderStatic));
+        Button1.setFocusPainted(false);
+        Button2.setFocusPainted(false);
+        Button3.setFocusPainted(false);
+        Button4.setFocusPainted(false);
+        Button5.setFocusPainted(false);
+        Button6.setFocusPainted(false);
+        Button7.setFocusPainted(false);
+        Button8.setFocusPainted(false);
+        Button9.setFocusPainted(false);
+        ButtonSwitch.setFocusPainted(false);
+        ButtonReset.setFocusPainted(false);
         Button1.setFont(Button1.getFont().deriveFont(20f));
         Button2.setFont(Button1.getFont().deriveFont(20f));
         Button3.setFont(Button1.getFont().deriveFont(20f));
@@ -899,7 +910,7 @@ public class MainWindow extends JDialog {
             if (getTu() == Turn.User) {
                 Bo.set(i, Chess.O);
                 ((AbstractButton)target).setText(" O ");
-                target.setForeground(Green);
+                target.setForeground(ChessO);
                 setTu(Turn.Response);
                 checkResult();
                 if (!Bo.inDebugForm() && getRe() == Result.Empty)
@@ -910,7 +921,7 @@ public class MainWindow extends JDialog {
             } else if (getTu() == Turn.Response) {
                 Bo.set(i, Chess.X);
                 ((AbstractButton)target).setText(" X ");
-                target.setForeground(Red);
+                target.setForeground(ChessX);
                 setTu(Turn.User);
                 checkResult();
             }
@@ -994,11 +1005,13 @@ public class MainWindow extends JDialog {
         }
         @Override
         public void focusGained(FocusEvent e) {
-            ((JComponent)e.getSource()).setBorder(new LineBorder(LightSeaGreen));
+            JComponent sender = (JComponent)e.getSource();
+            sender.setBorder(new LineBorder(BorderHover));
         }
         @Override
         public void focusLost(FocusEvent e) {
-            ((JComponent)e.getSource()).setBorder(new LineBorder(DodgerBlue));
+            JComponent sender = (JComponent)e.getSource();
+            sender.setBorder(new LineBorder(BorderStatic));
         }
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -1008,14 +1021,24 @@ public class MainWindow extends JDialog {
         }
         @Override
         public void mouseReleased(MouseEvent e) {
+            JComponent sender = (JComponent)e.getSource();
+            if (!sender.isEnabled()) {
+                sender.setBackground(ControlStatic);
+            }
         }
         @Override
         public void mouseEntered(MouseEvent e) {
-            ((JComponent)e.getSource()).setBackground(GhostWhite);
+            JComponent sender = (JComponent)e.getSource();
+            if (sender.isEnabled()) {
+                sender.setBackground(ControlHover);
+            }
         }
         @Override
         public void mouseExited(MouseEvent e) {
-            ((JComponent)e.getSource()).setBackground(AliceBlue);
+            JComponent sender = (JComponent)e.getSource();
+            if (sender.isEnabled()) {
+                sender.setBackground(ControlStatic);
+            }
         }
     }
     private class SwitchListener implements ActionListener {
