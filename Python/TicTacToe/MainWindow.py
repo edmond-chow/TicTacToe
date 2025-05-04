@@ -32,13 +32,14 @@
  *
  *   If you have any inquiry, feel free to contact <edmond-chow@outlook.com>.
 """
+import ctypes
+import random
 from copy import copy
 from enum import Enum
-import random
 from typing import Final
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon, QFont, QMouseEvent, QKeyEvent, QShowEvent
-from PySide6.QtWidgets import QMainWindow, QPushButton
+from PySide6.QtWidgets import QMainWindow, QPushButton, QApplication
 field: Final[int] = 0xF3F3F3F
 parse: Final[int] = 0xF000000
 match: Final[int] = 0x3F3F3F
@@ -635,6 +636,11 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(":icons/TicTacToe.ico"))
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint)
     def showEvent(self, e: QShowEvent):
+        scr = QApplication.primaryScreen().availableGeometry().size()
+        win = self.frameSize()
+        btm_off = ctypes.windll.User32.GetSystemMetrics(33) + ctypes.windll.User32.GetSystemMetrics(92)
+        loc = QPoint((scr.width() - win.width()) >> 1, (scr.height() - win.height() - btm_off) >> 1)
+        self.move(loc)
         self.main_window_load(self, e)
     def __init__(self):
         super().__init__(None)
