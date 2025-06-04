@@ -100,22 +100,22 @@ where the bits interpretation of Code same as Source. The original bits storing
 9 Chesses now are for control codes to generate those 3 Packs.
 
 Won Pack Transformation
-* Empty(0b00) -> Chess.None(0b00)
-* Except(0b01) -> Chess.None(0b00)
-* Preserve(0b10) -> Chess.O(0b10)
-* Preferred(0b11) -> Chess.Preferred(0b11)
+* Empty (0b00) -> Chess.None (0b00)
+* Except (0b01) -> Chess.None (0b00)
+* Preserve (0b10) -> Chess.O (0b10)
+* Preferred (0b11) -> Chess.Preferred (0b11)
 
 Lost Pack Transformation
-* Empty(0b00) -> Chess.None(0b00)
-* Except(0b01) -> Chess.None(0b00)
-* Preserve(0b10) -> Chess.X(0b01)
-* Preferred(0b11) -> Chess.Preferred(0b11)
+* Empty (0b00) -> Chess.None (0b00)
+* Except (0b01) -> Chess.None (0b00)
+* Preserve (0b10) -> Chess.X (0b01)
+* Preferred (0b11) -> Chess.Preferred (0b11)
 
 Mask Pack Transformation
-* Empty(0b00) -> Chess.Preferred(0b11)
-* Except(0b01) -> Chess.None(0b00)
-* Preserve(0b10) -> Chess.Preferred(0b11)
-* Preferred(0b11) -> Chess.Preferred(0b11)
+* Empty (0b00) -> Chess.Preferred (0b11)
+* Except (0b01) -> Chess.None (0b00)
+* Preserve (0b10) -> Chess.Preferred (0b11)
+* Preferred (0b11) -> Chess.Preferred (0b11)
 
 Special Masks for Validation in 32-bit with Sources and Codes
 * Field = 0xF3F3F3F
